@@ -104,9 +104,12 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
 
   return (
     <div className="pb-35">
+
       <Cover url={doc.coverImage} />
       <div className="relative mx-auto md:w-[90%]">
         <NavToolbar/>
+        <p>Created At: {new Date(doc._creationTime).toLocaleString()}</p>
+        <p>Last Update At: {new Date(doc.updatedAt || "").toLocaleString()}</p>
         <Toolbar initialData={doc} editorFont={activeFont} />
         <Editor
           onChange={onChange}

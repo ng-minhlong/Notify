@@ -17,7 +17,7 @@ export function ToasterProvider() {
               : "bg-white!",
         },
       }}
-      position="bottom-center"
+      position="top-right"
       theme={resolvedTheme as ToasterProps["theme"]}
     />
   );
