@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import { Cover } from "@/components/cover";
 import { Toolbar } from "@/components/toolbar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { NavToolbar } from "@/components/navtoolbar";
 
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -105,6 +106,7 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
     <div className="pb-35">
       <Cover url={doc.coverImage} />
       <div className="relative mx-auto md:w-[90%]">
+        <NavToolbar/>
         <Toolbar initialData={doc} editorFont={activeFont} />
         <Editor
           onChange={onChange}
