@@ -21,6 +21,7 @@ function getEditorText() {
 export function NavToolbar() {
     const [summaryOpen, setSummaryOpen] = useState(false);
     const [summaryText, setSummaryText] = useState("");
+    const [QAEntireOpen, setQAEntireOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
     // Sao chép handler
@@ -36,7 +37,10 @@ export function NavToolbar() {
 
     // Đọc note handler (placeholder)
     const handleReadNote = () => {
-        toast.info("Tính năng đang phát triển");
+        toast.info("This feature will onboard soon");
+    };
+    const askAIEntireNote = () => {
+        setQAEntireOpen(true);
     };
 
     // Summary handler
@@ -73,7 +77,13 @@ export function NavToolbar() {
                 <BookOpen className="w-4 h-4 mr-1" /> Đọc note
             </Button>
             <Button variant="outline" size="sm" onClick={handleSummary} disabled={loading}>
-                <FileText className="w-4 h-4 mr-1" /> {loading ? "Đang tóm tắt..." : "Summary"}
+                <FileText className="w-4 h-4 mr-1" /> {loading ? "Summarizing..." : "Summary"}
+            </Button>
+            <Button variant="outline" size="sm" onClick={askAIEntireNote}>
+                <BookOpen className="w-4 h-4 mr-1" /> Ask AI
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleReadNote}>
+                <BookOpen className="w-4 h-4 mr-1" /> Đọc note
             </Button>
 
             <Dialog open={summaryOpen} onOpenChange={setSummaryOpen}>
@@ -84,6 +94,18 @@ export function NavToolbar() {
 
                     <div className="whitespace-pre-line text-base min-h-[60px] overflow-y-auto pr-2">
                     {summaryText}
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={QAEntireOpen} onOpenChange={setQAEntireOpen}>
+                <DialogContent className="dark:bg-dark max-h-[80vh] overflow-y-auto " >
+                    <DialogHeader>
+                    <DialogTitle>Ask AI</DialogTitle>
+                    </DialogHeader>
+
+                    <div className="whitespace-pre-line text-base min-h-[60px] overflow-y-auto pr-2">
+                    <p>Xin chào</p>
                     </div>
                 </DialogContent>
             </Dialog>

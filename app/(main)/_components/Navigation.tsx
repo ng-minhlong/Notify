@@ -19,7 +19,9 @@ import {
   PlusCircle,
   Search,
   Settings,
+  Calendar,
   Trash,
+  ChartNoAxesColumnIncreasing 
 } from "lucide-react";
 import {
   Popover,
@@ -29,6 +31,9 @@ import {
 import { TrashBox } from "./TrashBox";
 import { useSearch } from "@/hooks/useSearch";
 import { useSettings } from "@/hooks/useSettingsModal";
+import { useCalendar } from "@/hooks/useCalendarModal";
+import { useUpgrade } from "@/hooks/useUpgradeModal";
+
 import { Navbar } from "./Navbar";
 import { ScrollableList } from "@/components/scrollable-list";
 import { FavoritesList } from "./FavoritesList";
@@ -44,6 +49,9 @@ const Navigation = () => {
 
   const search = useSearch();
   const settings = useSettings();
+  const calendar = useCalendar();
+  const upgrade = useUpgrade();
+
   const { focusMode } = useFocusMode();
 
   const create = useMutation(api.documents.create);
@@ -211,7 +219,10 @@ const Navigation = () => {
             shortcut="Ctrl + K"
           />
           <Item label="Settings" icon={Settings} onClick={settings.onOpen} />
+          <Item label="Calendar" icon={Calendar} onClick={calendar.onOpen} />
           <Item onClick={handleCreate} label="New page" icon={PlusCircle} />
+
+          <Item label="Upgrade" icon={ChartNoAxesColumnIncreasing } onClick={upgrade.onOpen} />
         </div>
         <div className="mt-4">
           <div>
@@ -275,6 +286,7 @@ const Navigation = () => {
             )}
           </nav>
         )}
+        
       </div>
     </>
   );

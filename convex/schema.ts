@@ -24,4 +24,20 @@ export default defineSchema({
     editorFont: v.optional(v.string()),
     focusMode: v.optional(v.boolean()),
   }).index("by_user", ["userId"]),
+
+  userCredits: defineTable({
+    userId: v.string(),
+
+    // plan của user
+    plan: v.union(
+      v.literal("free"),
+      v.literal("pro")
+    ),
+
+    // số lần đã dùng trong ngày
+    used: v.number(),
+
+    // ngày cuối cùng sử dụng (YYYY-MM-DD)
+    lastUsedDate: v.string(),
+  }).index("by_user", ["userId"]),
 });
