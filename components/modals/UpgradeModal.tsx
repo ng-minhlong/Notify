@@ -52,7 +52,7 @@ export const UpgradeModal = () => {
     <Dialog open={upgrade.isOpen} onOpenChange={upgrade.onClose}>
       <DialogTitle hidden>Upgrade your Plan</DialogTitle>
 
-      <DialogContent className="max-w-6xl dark:bg-dark">
+      <DialogContent className="w-[90vw] max-w-none">
         <DialogHeader className="border-b pb-3">
           <h2 className="text-xl font-semibold">
             Upgrade your plan

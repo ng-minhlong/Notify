@@ -491,3 +491,113 @@ export const getFavorites = query({
     return documents;
   },
 });
+
+export const addSummaryToHistory = mutation({
+  args: {
+    id: v.id("documents"),
+    summary: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const userId = identity.subject;
+
+    const existingDocument = await ctx.db.get(args.id);
+
+    if (!existingDocument) {
+      throw new Error("Document not found");
+    }
+
+    if (existingDocument.userId !== userId) {
+      throw new Error("Unauthorized");
+    }
+
+    // Parse existing history or create new array
+    let history: Array<{ content: string; createdAt: number }> = [];
+    if (existingDocument.summaryHistory) {
+      try {
+        history = JSON.parse(existingDocument.summaryHistory);
+      } catch {
+        history = [];
+      }
+    }
+
+    // Add new summary
+    history.push({
+      content: args.summary,
+      createdAt: Date.now(),
+    });
+
+    // Limit history to 10 most recent summaries
+    if (history.length > 10) {
+      history = history.slice(-10);
+    }
+
+    // Update document
+    const document = await ctx.db.patch(args.id, {
+      summaryHistory: JSON.stringify(history),
+      updatedAt: Date.now(),
+    });
+
+    return document;
+  },
+});
+
+export const addMindmapToHistory = mutation({
+  args: {
+    id: v.id("documents"),
+    mindmap: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const userId = identity.subject;
+
+    const existingDocument = await ctx.db.get(args.id);
+
+    if (!existingDocument) {
+      throw new Error("Document not found");
+    }
+
+    if (existingDocument.userId !== userId) {
+      throw new Error("Unauthorized");
+    }
+
+    // Parse existing history or create new array
+    let history: Array<{ content: string; createdAt: number }> = [];
+    if (existingDocument.mindmapHistory) {
+      try {
+        history = JSON.parse(existingDocument.mindmapHistory);
+      } catch {
+        history = [];
+      }
+    }
+
+    // Add new mindmap
+    history.push({
+      content: args.mindmap,
+      createdAt: Date.now(),
+    });
+
+    // Limit history to 10 most recent mindmaps
+    if (history.length > 10) {
+      history = history.slice(-10);
+    }
+
+    // Update document
+    const document = await ctx.db.patch(args.id, {
+      mindmapHistory: JSON.stringify(history),
+      updatedAt: Date.now(),
+    });
+
+    return document;
+  },
+});

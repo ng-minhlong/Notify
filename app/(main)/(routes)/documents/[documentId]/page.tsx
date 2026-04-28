@@ -8,6 +8,8 @@ import { Cover } from "@/components/cover";
 import { Toolbar } from "@/components/toolbar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NavToolbar } from "@/components/navtoolbar";
+import { MinimizeWindowProvider } from "@/components/minimize-window/MinimizeWindowContext";
+import { MinimizeWindowAutoCloser } from "@/components/minimize-window/MinimizeWindowAutoCloser";
 
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -22,6 +24,11 @@ interface DocumentIdPageProps {
   }>;
 }
 
+
+
+
+
+
 const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
   const { documentId } = use(params);
   const [editor, setEditor] = useState<BlockNoteEditor | null>(null);
@@ -31,6 +38,13 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
     () => dynamic(() => import("@/components/editor"), { ssr: false }),
     [],
   );
+
+  // Hàm lấy text editor cho minimize window
+  const getEditorText = () => {
+    const blocks = document.querySelectorAll('[data-node-type="blockOuter"]');
+    return Array.from(blocks).map(b => b.textContent.trim()).filter(Boolean).join("\n");
+  };
+
 
   const doc = useQuery(api.documents.getById, {
     documentId: documentId,
@@ -103,23 +117,25 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
   }
 
   return (
-    <div className="pb-35">
-
-      <Cover url={doc.coverImage} />
-      <div className="relative mx-auto md:w-[90%]">
-        <NavToolbar/>
-        <p>Created At: {new Date(doc._creationTime).toLocaleString()}</p>
-        <p>Last Update At: {new Date(doc.updatedAt || "").toLocaleString()}</p>
-        <Toolbar initialData={doc} editorFont={activeFont} />
-        <Editor
-          onChange={onChange}
-          initialContent={doc.content}
-          onEditorReady={setEditor}
-          editorFont={activeFont}
-        />
-        <TableOfContents editor={editor} />
+    <MinimizeWindowProvider>
+      <MinimizeWindowAutoCloser getEditorText={getEditorText} documentId={documentId} />
+      <div className="pb-35">
+        <Cover url={doc.coverImage} />
+        <div className="relative mx-auto md:w-[90%]">
+          <NavToolbar />
+          <p>Created At: {new Date(doc._creationTime).toLocaleString()}</p>
+          <p>Last Update At: {new Date(doc.updatedAt || "").toLocaleString()}</p>
+          <Toolbar initialData={doc} editorFont={activeFont} />
+          <Editor
+            onChange={onChange}
+            initialContent={doc.content}
+            onEditorReady={setEditor}
+            editorFont={activeFont}
+          />
+          <TableOfContents editor={editor} />
+        </div>
       </div>
-    </div>
+    </MinimizeWindowProvider>
   );
 };
 export default DocumentIdPage;

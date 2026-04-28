@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
 	try {
-		const { text, prompt } = await req.json();
+		const { text } = await req.json();
 		if (!text || text.length < 50) {
 			return NextResponse.json({ error: "Text must be at least 50 characters." }, { status: 400 });
 		}
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 			body: JSON.stringify({
 				model: "openai/gpt-oss-20b",
 				messages: [
-					{ role: "system", content: prompt || "Tóm tắt nội dung sau bằng tiếng Việt, ngắn gọn, súc tích, dễ hiểu cho người mới bắt đầu:" },
+					{ role: "system", content: "Tóm tắt nội dung sau bằng tiếng Việt, ngắn gọn, súc tích, dễ hiểu cho người mới bắt đầu:" },
 					{ role: "user", content: text },
 				],
 				max_tokens: 512,
