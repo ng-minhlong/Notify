@@ -21,6 +21,7 @@ import {
   Settings,
   Calendar,
   Trash,
+  Hammer,
   ChartNoAxesColumnIncreasing 
 } from "lucide-react";
 import {
@@ -33,7 +34,7 @@ import { useSearch } from "@/hooks/useSearch";
 import { useSettings } from "@/hooks/useSettingsModal";
 import { useCalendar } from "@/hooks/useCalendarModal";
 import { useUpgrade } from "@/hooks/useUpgradeModal";
-
+import { useTools } from "@/hooks/useToolsModal";
 import { Navbar } from "./Navbar";
 import { ScrollableList } from "@/components/scrollable-list";
 import { FavoritesList } from "./FavoritesList";
@@ -51,6 +52,7 @@ const Navigation = () => {
   const settings = useSettings();
   const calendar = useCalendar();
   const upgrade = useUpgrade();
+  const tools = useTools();
 
   const { focusMode } = useFocusMode();
 
@@ -220,9 +222,9 @@ const Navigation = () => {
           />
           <Item label="Settings" icon={Settings} onClick={settings.onOpen} />
           <Item label="Calendar" icon={Calendar} onClick={calendar.onOpen} />
-          <Item onClick={handleCreate} label="New page" icon={PlusCircle} />
-
+          <Item label="New page" onClick={handleCreate} icon={PlusCircle} />
           <Item label="Upgrade" icon={ChartNoAxesColumnIncreasing } onClick={upgrade.onOpen} />
+          <Item label="More Tools" icon={Hammer } onClick={tools.onOpen} />
         </div>
         <div className="mt-4">
           <div>

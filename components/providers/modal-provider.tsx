@@ -6,6 +6,7 @@ import { SettingsModal } from "@/components/modals/SettingsModal";
 import { CoverImageModal } from "@/components/modals/CoverImageModal";
 import { CalendarModal } from "@/components/modals/CalendarModal";
 import { UpgradeModal } from "@/components/modals/UpgradeModal";
+import { ToolsModal } from "@/components/modals/ToolsModal";
 
 export const ModalProvider = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -24,6 +25,7 @@ export const ModalProvider = () => {
       <CoverImageModal />
       <CalendarModal/>
       <UpgradeModal/>
+      <ToolsModal/>
     </>
   );
 };
