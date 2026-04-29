@@ -11,6 +11,7 @@ export default defineSchema({
     coverImage: v.optional(v.string()),
     summaryHistory: v.optional(v.string()),
     mindmapHistory: v.optional(v.string()),
+    qAHistory: v.optional(v.string()),
     icon: v.optional(v.string()),
     isPublished: v.boolean(),
     order: v.optional(v.number()),

@@ -34,6 +34,16 @@ interface MindmapItem {
     createdAt: number;
 }
 
+interface ChatMessage {
+    role: "user" | "assistant";
+    content: string;
+}
+
+interface QAConversation {
+    messages: ChatMessage[];
+    createdAt: number;
+}
+
 export function NavToolbar() {
     const params = useParams();
     const documentId = params?.documentId as Id<"documents">;
@@ -45,6 +55,11 @@ export function NavToolbar() {
     const [QAEntireOpen, setQAEntireOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [mindmapLoading, setMindmapLoading] = useState(false);
+    const [qaLoading, setQaLoading] = useState(false);
+    const [currentMessages, setCurrentMessages] = useState<ChatMessage[]>([]);
+    const [selectedQAConversation, setSelectedQAConversation] = useState<QAConversation | null>(null);
+    const [inputValue, setInputValue] = useState("");
+    const [isInChatMode, setIsInChatMode] = useState(false);
 
     // Fetch document to get summary history
     const doc = useQuery(api.documents.getById, {
@@ -55,6 +70,8 @@ export function NavToolbar() {
     const addSummaryToHistory = useMutation(api.documents.addSummaryToHistory);
     // Mutation to add mindmap to history
     const addMindmapToHistory = useMutation(api.documents.addMindmapToHistory);
+    // Mutation to add QA to history
+    const addQAToHistory = useMutation(api.documents.addQAToHistory);
 
     // Parse summary history
     const summaryHistory: SummaryItem[] = doc?.summaryHistory
@@ -64,6 +81,11 @@ export function NavToolbar() {
     // Parse mindmap history
     const mindmapHistory: MindmapItem[] = doc?.mindmapHistory
         ? JSON.parse(doc.mindmapHistory)
+        : [];
+
+    // Parse QA history
+    const qaHistory: QAConversation[] = doc?.qAHistory
+        ? JSON.parse(doc.qAHistory)
         : [];
 
     // Sao chép handler
@@ -82,7 +104,67 @@ export function NavToolbar() {
         toast.info("This feature will onboard soon");
     };
     const askAIEntireNote = () => {
+        setCurrentMessages([]);
+        setSelectedQAConversation(null);
+        setInputValue("");
+        setIsInChatMode(false);
         setQAEntireOpen(true);
+    };
+
+    // Send QA message
+    const handleSendQAMessage = async () => {
+        if (!inputValue.trim()) return;
+
+        const documentText = getEditorText();
+        if (!documentText || documentText.length < 10) {
+            toast.error("Document content is too short");
+            return;
+        }
+
+        const userMessage = inputValue.trim();
+        setInputValue("");
+
+        // Add user message to current chat
+        const updatedMessages = [...currentMessages, { role: "user" as const, content: userMessage }];
+        setCurrentMessages(updatedMessages);
+
+        setQaLoading(true);
+        try {
+            const res = await fetch("/api/tool/qa", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    text: documentText,
+                    question: userMessage,
+                }),
+            });
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({ error: "Unknown error" }));
+                throw new Error(err.error || "Failed to get AI response");
+            }
+
+            const data = await res.json();
+            const assistantMessage = data.answer || "No response";
+
+            // Add assistant message
+            const finalMessages = [...updatedMessages, { role: "assistant" as const, content: assistantMessage }];
+            setCurrentMessages(finalMessages);
+
+            // Save to history
+            await addQAToHistory({
+                id: documentId,
+                conversation: JSON.stringify(finalMessages),
+            });
+
+            toast.success("Conversation saved!");
+        } catch (e: any) {
+            toast.error(e.message || "Failed to process question");
+            // Remove the user message if AI failed
+            setCurrentMessages(currentMessages);
+        } finally {
+            setQaLoading(false);
+        }
     };
 
     // Open summary history modal
@@ -271,14 +353,160 @@ export function NavToolbar() {
 
                 {/* Ask AI Modal */}
                 <Dialog open={QAEntireOpen} onOpenChange={setQAEntireOpen}>
-                    <DialogContent className="dark:bg-dark max-h-[80vh] overflow-y-auto">
+                    <DialogContent className="dark:bg-dark max-h-[80vh] flex flex-col w-full max-w-2xl">
                         <DialogHeader>
                             <DialogTitle>Ask AI</DialogTitle>
                         </DialogHeader>
 
-                        <div className="whitespace-pre-line text-base min-h-[60px] overflow-y-auto pr-2">
-                            <p>Hello</p>
-                        </div>
+                        {selectedQAConversation ? (
+                            // View saved conversation
+                            <div className="flex flex-col h-[500px]">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        setSelectedQAConversation(null);
+                                        setIsInChatMode(false);
+                                    }}
+                                    className="mb-4"
+                                >
+                                    ← Back to conversations
+                                </Button>
+                                <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+                                    {selectedQAConversation.messages.map((msg, idx) => (
+                                        <div
+                                            key={idx}
+                                            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                                        >
+                                            <div
+                                                className={`max-w-xs lg:max-w-md xl:max-w-lg px-4 py-2 rounded-lg ${
+                                                    msg.role === "user"
+                                                        ? "bg-blue-500 text-white rounded-br-none"
+                                                        : "bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none"
+                                                }`}
+                                            >
+                                                <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-2 text-center">
+                                    {new Date(selectedQAConversation.createdAt).toLocaleString()}
+                                </p>
+                            </div>
+                        ) : isInChatMode ? (
+                            // Current chat
+                            <div className="flex flex-col h-[500px]">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        setCurrentMessages([]);
+                                        setInputValue("");
+                                    }}
+                                    className="mb-4"
+                                >
+                                    + New Chat
+                                </Button>
+                                <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+                                    {currentMessages.map((msg, idx) => (
+                                        <div
+                                            key={idx}
+                                            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                                        >
+                                            <div
+                                                className={`max-w-xs lg:max-w-md xl:max-w-lg px-4 py-2 rounded-lg ${
+                                                    msg.role === "user"
+                                                        ? "bg-blue-500 text-white rounded-br-none"
+                                                        : "bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none"
+                                                }`}
+                                            >
+                                                <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {qaLoading && (
+                                        <div className="flex justify-start">
+                                            <div className="bg-gray-200 dark:bg-gray-800 px-4 py-2 rounded-lg rounded-bl-none">
+                                                <div className="flex space-x-2">
+                                                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
+                                                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                                                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "0.4s" }}></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="mt-4 flex gap-2 border-t dark:border-gray-700 pt-4">
+                                    <input
+                                        type="text"
+                                        value={inputValue}
+                                        onChange={(e) => setInputValue(e.target.value)}
+                                        onKeyPress={(e) => {
+                                            if (e.key === "Enter" && !qaLoading) {
+                                                handleSendQAMessage();
+                                            }
+                                        }}
+                                        placeholder="Type your question..."
+                                        disabled={qaLoading}
+                                        className="flex-1 px-3 py-2 rounded-lg border dark:border-gray-700 dark:bg-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                    <Button
+                                        onClick={handleSendQAMessage}
+                                        disabled={qaLoading || !inputValue.trim()}
+                                        size="sm"
+                                    >
+                                        Send
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : (
+                            // History list or start new chat
+                            <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                                <Button
+                                    onClick={() => setIsInChatMode(true)}
+                                    className="w-full"
+                                    size="lg"
+                                >
+                                    + Start New Chat
+                                </Button>
+
+                                {qaHistory.length > 0 && (
+                                    <>
+                                        <div className="text-sm font-semibold text-gray-600 dark:text-gray-400 mt-6">
+                                            Chat History
+                                        </div>
+                                        <div className="space-y-2">
+                                            {qaHistory.map((conversation, idx) => {
+                                                const lastMessage = conversation.messages[conversation.messages.length - 1];
+                                                const previewText = lastMessage?.content?.substring(0, 50) || "Empty conversation";
+                                                return (
+                                                    <div
+                                                        key={idx}
+                                                        onClick={() => setSelectedQAConversation(conversation)}
+                                                        className="p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition"
+                                                    >
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                            {new Date(conversation.createdAt).toLocaleString()}
+                                                        </p>
+                                                        <p className="text-sm line-clamp-2 mt-1 text-gray-900 dark:text-gray-100">
+                                                            {previewText}...
+                                                        </p>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </>
+                                )}
+
+                                {qaHistory.length === 0 && currentMessages.length === 0 && (
+                                    <div className="text-center py-8 text-gray-500">
+                                        <p>No chat history yet</p>
+                                        <p className="text-sm">Start a new chat to ask questions about your note</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </DialogContent>
                 </Dialog>
 
@@ -291,7 +519,7 @@ export function NavToolbar() {
 
                         {selectedMindmap ? (
                             // Detail view with mindmap visualization
-                            <div className="space-y-4 text-black dark:text-black">
+                            <div className="space-y-4">
                                 <Button 
                                     variant="outline" 
                                     size="sm"
@@ -305,7 +533,7 @@ export function NavToolbar() {
                                         {new Date(selectedMindmap.createdAt).toLocaleString()}
                                     </p>
 
-                                    <div className="border rounded-md overflow-hidden bg-white dark:bg-zinc-900">
+                                    <div className="border rounded-md overflow-hidden text-black bg-white dark:bg-zinc-900">
                                         <MindmapViewer data={selectedMindmap.content} />
                                     </div>
                                 </div>
