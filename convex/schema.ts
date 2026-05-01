@@ -107,15 +107,18 @@ customers: defineTable({
   .index("by_email", ["email"]),
 
 subscriptions: defineTable({
-  subscriptionId: v.string(), // paddle_subscription_id
-  status: v.string(), // active, canceled, past_due...
+  subscriptionId: v.string(),
+  status: v.string(),
 
   priceId: v.optional(v.string()),
   productId: v.optional(v.string()),
 
   scheduledChange: v.optional(v.string()),
 
-  customerId: v.string(), // link thủ công
+  customerId: v.string(),
+
+  // 🔥 THÊM DÒNG NÀY
+  userId: v.optional(v.string()),
 
   currentPeriodEnd: v.optional(v.number()),
 
@@ -123,8 +126,12 @@ subscriptions: defineTable({
   updatedAt: v.number(),
 })
   .index("by_subscription_id", ["subscriptionId"])
-  .index("by_customer_id", ["customerId"]),
+  .index("by_customer_id", ["customerId"])
+  // 👉 nên thêm luôn index này
+  .index("by_user_id", ["userId"]),
 
+
+  
 calendarNotes: defineTable({
   userId: v.string(),
   date: v.string(), // YYYY-MM-DD format

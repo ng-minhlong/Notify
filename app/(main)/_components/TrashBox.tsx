@@ -23,6 +23,7 @@ export const TrashBox = () => {
   const restore = useMutation(api.documents.restore);
   const remove = useMutation(api.documents.remove);
   const removeAll = useMutation(api.documents.removeAll);
+  const freeStorage = useMutation(api.userUsage.freeStorage);
 
   const [search, setSearch] = useState("");
 
@@ -49,9 +50,37 @@ export const TrashBox = () => {
   };
 
   const deleteFromEdgeStore = async (urls: string[]) => {
+    let totalFileSize = 0;
+
+    // First, try to get file sizes and delete files
     await Promise.allSettled(
-      urls.map((url) => edgestore.publicFiles.delete({ url })),
+      urls.map(async (url) => {
+        try {
+          const response = await fetch(url, { method: "HEAD" });
+          const contentLength = response.headers.get("content-length");
+          if (contentLength) {
+            totalFileSize += parseInt(contentLength, 10);
+          }
+        } catch (err) {
+          console.warn("Failed to get file size for URL:", url, err);
+        }
+
+        try {
+          await edgestore.publicFiles.delete({ url });
+        } catch (err) {
+          console.warn("Failed to delete file from edgestore:", url, err);
+        }
+      }),
     );
+
+    // Free storage after calculating total size
+    if (totalFileSize > 0) {
+      try {
+        await freeStorage({ fileSizeBytes: totalFileSize });
+      } catch (err) {
+        console.warn("Failed to free storage:", err);
+      }
+    }
   };
 
   const onRemove = (documentId: Id<"documents">) => {

@@ -394,9 +394,7 @@ const Navigation = () => {
                     <Info className="h-3.5 w-3.5" />
                     AI limits
                   </span>
-                  <span className="font-medium text-foreground">
-                    Hourly · Daily · Weekly · Monthly
-                  </span>
+                  
                 </button>
               </PopoverTrigger>
 

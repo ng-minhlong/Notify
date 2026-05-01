@@ -51,6 +51,8 @@ export const CoverImageModal = () => {
   const update = useMutation(api.documents.update);
   const coverImage = useCoverImage();
   const { edgestore } = useEdgeStore();
+  const checkAndConsumeStorage = useMutation(api.userUsage.checkAndConsumeStorage);
+  const freeStorage = useMutation(api.userUsage.freeStorage);
 
   const [isDragging, setIsDragging] = useState(false);
 
@@ -106,33 +108,57 @@ export const CoverImageModal = () => {
       setIsSubmitting(true);
       setFile(file);
 
-      const res = await edgestore.publicFiles.upload({
-        file,
-        options: {
-          replaceTargetUrl: coverImage.url?.startsWith("http")
-            ? coverImage.url
-            : undefined,
-        },
-      });
+      try {
+        // ✅ CHECK STORAGE BEFORE UPLOADING
+        await checkAndConsumeStorage({ fileSizeBytes: file.size });
 
-      await update({
-        id: params.documentId as Id<"documents">,
-        coverImage: res.url,
-      });
+        const res = await edgestore.publicFiles.upload({
+          file,
+          options: {
+            replaceTargetUrl: coverImage.url?.startsWith("http")
+              ? coverImage.url
+              : undefined,
+          },
+        });
 
-      onClose();
+        await update({
+          id: params.documentId as Id<"documents">,
+          coverImage: res.url,
+        });
+
+        onClose();
+      } catch (error: any) {
+        toast.error(error.message || "Failed to upload cover image");
+        setIsSubmitting(false);
+      }
     }
   };
 
   const onSelectColor = async (color: string) => {
-    if (coverImage.url?.startsWith("http")) {
-      await edgestore.publicFiles.delete({ url: coverImage.url });
+    try {
+      if (coverImage.url?.startsWith("http")) {
+        // Try to get file size and free storage
+        try {
+          const response = await fetch(coverImage.url, { method: "HEAD" });
+          const contentLength = response.headers.get("content-length");
+          if (contentLength) {
+            const fileSize = parseInt(contentLength, 10);
+            await freeStorage({ fileSizeBytes: fileSize });
+          }
+        } catch (err) {
+          console.warn("Failed to get file size for deletion:", err);
+        }
+
+        await edgestore.publicFiles.delete({ url: coverImage.url });
+      }
+      await update({
+        id: params.documentId as Id<"documents">,
+        coverImage: color,
+      });
+      onClose();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update cover image");
     }
-    await update({
-      id: params.documentId as Id<"documents">,
-      coverImage: color,
-    });
-    onClose();
   };
 
   return (

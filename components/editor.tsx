@@ -15,6 +15,9 @@ import { BlockNoteView } from "@blocknote/mantine";
 import { useTheme } from "next-themes";
 import { useEdgeStore } from "@/lib/edgestore";
 import { codeBlockOptions } from "@blocknote/code-block";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { toast } from "sonner";
 import "@blocknote/core/style.css";
 import "@blocknote/mantine/style.css";
 
@@ -74,15 +77,28 @@ const Editor = ({
 }: EditorProps) => {
   const { resolvedTheme } = useTheme();
   const { edgestore } = useEdgeStore();
+  const checkAndConsumeStorage = useMutation(api.userUsage.checkAndConsumeStorage);
 
   const coverImage = useCoverImage();
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const trackedUrlsRef = useRef<Set<string>>(new Set());
+  const fileSizeMapRef = useRef<Map<string, number>>(new Map());
+  const freeStorage = useMutation(api.userUsage.freeStorage);
 
   const handleUpload = async (file: File) => {
-    const res = await edgestore.publicFiles.upload({ file });
-    return res.url;
+    try {
+      // ✅ CHECK STORAGE BEFORE UPLOADING
+      await checkAndConsumeStorage({ fileSizeBytes: file.size });
+
+      const res = await edgestore.publicFiles.upload({ file });
+      // Store file size for later deletion tracking
+      fileSizeMapRef.current.set(res.url, file.size);
+      return res.url;
+    } catch (error: any) {
+      toast.error(error.message || "Failed to upload file");
+      throw error;
+    }
   };
 
   const editor: BlockNoteEditor = useCreateBlockNote({
@@ -111,6 +127,15 @@ const Editor = ({
     );
 
     removedUrls.forEach((url) => {
+      // Get file size and free storage
+      const fileSize = fileSizeMapRef.current.get(url);
+      if (fileSize) {
+        freeStorage({ fileSizeBytes: fileSize }).catch((err) => {
+          console.warn("Failed to free storage for deleted file:", url, err);
+        });
+        fileSizeMapRef.current.delete(url);
+      }
+
       edgestore.publicFiles.delete({ url }).catch((err) => {
         console.warn("Failed to delete file in edgestore:", url, err);
       });

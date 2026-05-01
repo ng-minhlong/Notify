@@ -15,6 +15,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useEdgeStore } from "@/lib/edgestore";
 import { Skeleton } from "./ui/skeleton";
 import { Spinner } from "./spinner";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +37,7 @@ export const Cover = ({ url, preview }: CoverImageProps) => {
   const { focusMode } = useFocusMode({ enabled: !preview });
 
   const removeCoverImage = useMutation(api.documents.removeCoverImage);
+  const freeStorage = useMutation(api.userUsage.freeStorage);
 
   const canHover = useMediaQuery("(hover: hover) and (pointer: fine)");
 
@@ -46,6 +48,18 @@ export const Cover = ({ url, preview }: CoverImageProps) => {
         id: params.documentId as Id<"documents">,
       });
       if (url && url.startsWith("http")) {
+        // Try to get file size and free storage
+        try {
+          const response = await fetch(url, { method: "HEAD" });
+          const contentLength = response.headers.get("content-length");
+          if (contentLength) {
+            const fileSize = parseInt(contentLength, 10);
+            await freeStorage({ fileSizeBytes: fileSize });
+          }
+        } catch (err) {
+          console.warn("Failed to get file size for deletion:", err);
+        }
+
         await edgestore.publicFiles.delete({ url });
       }
     } catch (err) {

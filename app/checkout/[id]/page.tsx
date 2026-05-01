@@ -6,7 +6,7 @@ import { plans } from "@/lib/plan";
 import { CheckCircle2, ArrowLeft, ShieldCheck, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Script from "next/script";
-
+import { useAuth } from "@clerk/nextjs";
 // Khai báo kiểu cho Paddle để TS không báo lỗi
 declare global {
   interface Window {
@@ -15,6 +15,7 @@ declare global {
 }
 
 export default function CheckoutPage() {
+  const { userId } = useAuth();
   const { id } = useParams();
   const router = useRouter();
   const [isPaddleLoaded, setIsPaddleLoaded] = useState(false);
@@ -48,6 +49,9 @@ export default function CheckoutPage() {
             quantity: 1,
           },
         ],
+        customData: {
+          userId: userId,
+        },
       });
     }
   }, [isPaddleLoaded, selectedPlan]);
@@ -96,7 +100,7 @@ export default function CheckoutPage() {
 
             <div className="mb-10">
               <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold uppercase tracking-widest">
-                Your order
+                Your order for {userId}
               </span>
               <h1 className="text-4xl font-extrabold mt-6 text-slate-900">Gói {selectedPlan.name}</h1>
               <p className="text-slate-600 mt-2 text-lg">{selectedPlan.features}</p>

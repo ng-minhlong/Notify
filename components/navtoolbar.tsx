@@ -72,6 +72,8 @@ export function NavToolbar() {
     const addMindmapToHistory = useMutation(api.documents.addMindmapToHistory);
     // Mutation to add QA to history
     const addQAToHistory = useMutation(api.documents.addQAToHistory);
+    // Mutation to check and consume AI usage
+    const checkAndConsumeAIUsage = useMutation(api.userUsage.checkAndConsumeAIUsage);
 
     // Parse summary history
     const summaryHistory: SummaryItem[] = doc?.summaryHistory
@@ -130,6 +132,9 @@ export function NavToolbar() {
 
         setQaLoading(true);
         try {
+            // ✅ CHECK AND CONSUME AI USAGE FIRST
+            await checkAndConsumeAIUsage({ amount: 1 });
+
             const res = await fetch("/api/tool/qa", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -159,7 +164,12 @@ export function NavToolbar() {
 
             toast.success("Conversation saved!");
         } catch (e: any) {
-            toast.error(e.message || "Failed to process question");
+            // Check if it's a limit error
+            if (e.message && e.message.includes("limit exceeded")) {
+                toast.error(e.message);
+            } else {
+                toast.error(e.message || "Failed to process question");
+            }
             // Remove the user message if AI failed
             setCurrentMessages(currentMessages);
         } finally {
@@ -182,6 +192,9 @@ export function NavToolbar() {
         }
         setLoading(true);
         try {
+            // ✅ CHECK AND CONSUME AI USAGE FIRST
+            await checkAndConsumeAIUsage({ amount: 1 });
+
             const res = await fetch("/api/tool/summary", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -201,8 +214,13 @@ export function NavToolbar() {
                 content: data.summary || "No data",
                 createdAt: Date.now(),
             });
-        } catch (e) {
-            toast.error("There is an unknown error");
+        } catch (e: any) {
+            // Check if it's a limit error
+            if (e.message && e.message.includes("limit exceeded")) {
+                toast.error(e.message);
+            } else {
+                toast.error(e.message || "There is an unknown error");
+            }
         } finally {
             setLoading(false);
         }
@@ -226,6 +244,9 @@ export function NavToolbar() {
         setMindmapLoading(true);
 
         try {
+            // ✅ CHECK AND CONSUME AI USAGE FIRST
+            await checkAndConsumeAIUsage({ amount: 1 });
+
             const res = await fetch("/api/tool/mindmap", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -252,9 +273,14 @@ export function NavToolbar() {
 				mindmap: mindmapStr,
             });
 
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            toast.error("Failed to generate mindmap");
+            // Check if it's a limit error
+            if (e.message && e.message.includes("limit exceeded")) {
+                toast.error(e.message);
+            } else {
+                toast.error(e.message || "Failed to generate mindmap");
+            }
         } finally {
             setMindmapLoading(false);
         }

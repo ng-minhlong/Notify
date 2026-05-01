@@ -66,6 +66,7 @@ export const updateUserPlanFromWebhook = mutation({
     userId: v.string(),
 
     plan: v.union(
+      v.literal("free"),
       v.literal("starter"),
       v.literal("pro")
     ),

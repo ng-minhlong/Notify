@@ -17,7 +17,7 @@ interface PlanLimits {
 
 export const PLAN_LIMITS: Record<PlanName, PlanLimits> = {
   Free: {
-    storageBytes: 100 * 1024 * 1024, // 100MB
+    storageBytes: 2 * 1024 * 1024, // 100MB
     aiCreditsPerHour: 5,
     aiCreditsPerDay: 10,
     aiCreditsPerWeek: 20,
