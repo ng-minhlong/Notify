@@ -96,7 +96,7 @@ export const UpgradeModal = () => {
               }`}
             >
               {plan.badge && (
-                <div className="absolute -top-3 left-4 flex items-center gap-1 rounded-full bg-black px-3 py-1 text-xs font-medium text-white dark:bg-white dark:text-black">
+                <div className="absolute -top-3 left-4 flex items-center gap-1 rounded-full bg-black px-3 py-1 text-xs font-medium text-white dark:bg-white dark:text-black max-w-2xl">
                   <Sparkles className="h-3.5 w-3.5" />
                   {plan.badge}
                 </div>

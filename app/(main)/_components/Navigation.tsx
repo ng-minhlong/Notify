@@ -40,6 +40,7 @@ import { ScrollableList } from "@/components/scrollable-list";
 import { FavoritesList } from "./FavoritesList";
 import { ActionTooltip } from "@/components/action-tooltip";
 import { useFocusMode } from "@/hooks/useFocusMode";
+import { useCalendarNoteCount } from "@/hooks/useCalendarNoteCount";
 
 const Navigation = () => {
   const params = useParams();
@@ -53,6 +54,7 @@ const Navigation = () => {
   const calendar = useCalendar();
   const upgrade = useUpgrade();
   const tools = useTools();
+  const calendarNoteCount = useCalendarNoteCount();
 
   const { focusMode } = useFocusMode();
 
@@ -221,7 +223,18 @@ const Navigation = () => {
             shortcut="Ctrl + K"
           />
           <Item label="Settings" icon={Settings} onClick={settings.onOpen} />
-          <Item label="Calendar" icon={Calendar} onClick={calendar.onOpen} />
+          <div className="relative">
+            <Item 
+              label={`Calendar${calendarNoteCount > 0 ? ` (${calendarNoteCount})` : ""}`}
+              icon={Calendar} 
+              onClick={calendar.onOpen} 
+            />
+            {calendarNoteCount > 0 && (
+              <div className="absolute top-1 right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold">
+                {calendarNoteCount > 99 ? "99+" : calendarNoteCount}
+              </div>
+            )}
+          </div>
           <Item label="New page" onClick={handleCreate} icon={PlusCircle} />
           <Item label="Upgrade" icon={ChartNoAxesColumnIncreasing } onClick={upgrade.onOpen} />
           <Item label="More Tools" icon={Hammer } onClick={tools.onOpen} />

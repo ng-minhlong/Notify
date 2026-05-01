@@ -7,7 +7,10 @@ CLERK_JWT_ISSUER_DOMAIN
 Cần tạo template jwt ở clerk theo convex
 Cần có path -> localhost:3000 ở clerk
 
+ max-w-... đặt ở dialogContent để render theo width cho modal (EX: <DialogContent className="dark:bg-dark  max-w-xl">)
 
+
+ 
 # Notify
 
 This project is a simplified clone of the popular productivity application, Notion. It's designed to replicate some of the core features of Notion, providing a platform where users can create, edit, and organize their notes in a flexible and intuitive interface.

@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as calendarNotes from "../calendarNotes.js";
 import type * as documents from "../documents.js";
 import type * as userSettings from "../userSettings.js";
 
@@ -18,6 +19,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  calendarNotes: typeof calendarNotes;
   documents: typeof documents;
   userSettings: typeof userSettings;
 }>;
