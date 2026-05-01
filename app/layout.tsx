@@ -9,6 +9,7 @@ import { EdgeStoreProvider } from "@/lib/edgestore";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ToasterProvider } from "@/components/providers/toaster-provider";
 import { shadcn } from "@clerk/themes";
+import PaddleProvider from "@/components/providers/paddle-provider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const lora = Lora({ subsets: ["latin"], variable: "--font-lora" });
@@ -47,11 +48,13 @@ export default function RootLayout({
       <body
         className={`${inter.className} ${inter.variable} ${lora.variable} ${jetbrainsMono.variable}`}
       >
+        <PaddleProvider />
         <ClerkProvider
           appearance={{
             theme: shadcn,
           }}
         >
+         
           <ConvexClientProvider>
             <EdgeStoreProvider>
               <ThemeProvider

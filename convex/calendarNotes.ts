@@ -13,7 +13,8 @@ export const createNote = mutation({
   },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthenticated");
+    if (!identity) return null; // hoặc null
+
     const userId = identity.subject;
     const now = Date.now();
 
@@ -39,7 +40,7 @@ export const getNotesByDate = query({
   },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthenticated");
+    if (!identity) return null; 
     const userId = identity.subject;
 
     return await ctx.db
@@ -58,7 +59,7 @@ export const getNotesByDateRange = query({
   },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthenticated");
+    if (!identity) return null; 
     const userId = identity.subject;
 
     return await ctx.db
@@ -82,7 +83,7 @@ export const getNotesCount = query({
   },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthenticated");
+    if (!identity) return null; 
     const userId = identity.subject;
 
     const notes = await ctx.db
@@ -101,7 +102,7 @@ export const getMultipleDatesCount = query({
   },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthenticated");
+    if (!identity) return null; 
     const userId = identity.subject;
     const countMap: Record<string, number> = {};
 
@@ -131,7 +132,7 @@ export const updateNote = mutation({
   },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthenticated");
+    if (!identity) return null; 
     const userId = identity.subject;
     const note = await ctx.db.get(args.noteId);
 
@@ -159,7 +160,7 @@ export const deleteNote = mutation({
   },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthenticated");
+    if (!identity) return null; 
     const userId = identity.subject;
     const note = await ctx.db.get(args.noteId);
 
@@ -180,7 +181,7 @@ export const permanentlyDeleteNote = mutation({
   },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthenticated");
+    if (!identity) return null; 
     const userId = identity.subject;
     const note = await ctx.db.get(args.noteId);
 

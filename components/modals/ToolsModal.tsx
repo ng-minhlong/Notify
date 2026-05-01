@@ -50,16 +50,21 @@ export const ToolsModal = () => {
 
   return (
     <Dialog open={tools.isOpen} onOpenChange={tools.onClose}>
-      <DialogTitle hidden>Upgrade your Plan</DialogTitle>
+      <DialogTitle hidden>Adaptive tools</DialogTitle>
 
-      <DialogContent className="w-[90vw] max-w-none">
+      <DialogContent className="w-[90vw] max-w-none max-w-2xl">
         <DialogHeader className="border-b pb-3">
           <h2 className="text-xl font-semibold">
-             More Tools
+             More Tools 
           </h2>
           <p className="text-sm text-muted-foreground">
-            Choose the plan that fits your needs
+            Some tools below will be avaliable soon ! 
           </p>
+          <div>
+            <li>Quick search in all documents</li>
+            <li>Distribution, graph for all documents</li>
+            <li>ChatBot in all documents (Using RAG)</li>
+          </div>
         </DialogHeader>
 
       </DialogContent>

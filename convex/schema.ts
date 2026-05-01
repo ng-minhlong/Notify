@@ -28,20 +28,58 @@ export default defineSchema({
     focusMode: v.optional(v.boolean()),
   }).index("by_user", ["userId"]),
 
-  userAccounts: defineTable({
+  userPlan: defineTable({
     userId: v.string(),
+
+    // 🔥 trạng thái app dùng
     plan: v.union(
       v.literal("free"),
       v.literal("starter"),
       v.literal("pro")
     ),
+
+    // 🔥 status logic (không phụ thuộc Paddle hoàn toàn)
+    status: v.union(
+      v.literal("active"),
+      v.literal("canceled"),
+      v.literal("past_due"),
+      v.literal("trial")
+    ),
+
+    // 🔥 mapping với Paddle
     paddleCustomerId: v.optional(v.string()),
     paddleSubscriptionId: v.optional(v.string()),
-    subscriptionStatus: v.optional(v.string()), // active, canceled, past_due
+
+    // 🔥 billing time
     currentPeriodEnd: v.optional(v.number()),
+
+    // 🔥 optional nhưng rất hữu ích
+    trialEndsAt: v.optional(v.number()),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_user", ["userId"]),
+
+
+
+  userUsage: defineTable({
+    userId: v.string(),
+
+    // STORAGE
+    storageUsed: v.number(),
+    // AI USAGE
+    aiHourlyUsed: v.number(),
+    aiHourlyResetAt: v.number(),
+    aiDailyUsed: v.number(),
+    aiDailyResetAt: v.number(),
+    aiWeeklyUsed: v.number(),
+    aiWeeklyResetAt: v.number(),
+    aiMonthlyUsed: v.number(),
+    aiMonthlyResetAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+
 
   userCredits: defineTable({
     userId: v.string(),

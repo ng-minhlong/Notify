@@ -8,70 +8,17 @@ import {
 } from "@/components/ui/dialog";
 import { useUpgrade } from "@/hooks/useUpgradeModal";
 import { Check, Sparkles } from "lucide-react";
+import { plans } from "@/lib/plan"
+import { useRouter } from "next/navigation";
+
+
+
 
 export const UpgradeModal = () => {
   const upgrade = useUpgrade();
+const router = useRouter();
 
-  const plans = [
-    {
-      name: "Free",
-      price: "$0",
-      period: "month",
-      desc: "For personal note-taking & light AI usage",
-      features: [
-        "Unlimited notes",
-        "Note basics: text, image, edit, voice, icon",
-        "Favourite notes + note calendar",
-        "100MB storage for image + voice",
-        "50 AI credits / month",
-        "Low daily AI cap",
-        "Basic AI: ask AI + summary",
-      ],
-      highlight: false,
-      badge: null,
-      button: "Current Plan",
-    },
-    {
-      name: "Starter",
-      price: "$10",
-      period: "month",
-      desc: "For regular users who want more AI",
-      features: [
-        "Unlimited notes",
-        "Note basics: text, image, edit, voice, icon",
-        "Favourite notes + note calendar",
-        "500MB storage for image + voice",
-        "250 AI credits / month",
-        "Medium daily AI cap",
-        "Ask AI + summary + read note aloud",
-        "Faster processing than Free",
-      ],
-      highlight: true,
-      badge: "Most Popular",
-      button: "Upgrade to Starter",
-    },
-    {
-      name: "Pro",
-      price: "$20",
-      period: "month",
-      desc: "For heavy AI usage and power users",
-      features: [
-        "Unlimited notes",
-        "Note basics: text, image, edit, voice, icon",
-        "Favourite notes + note calendar",
-        "5GB storage for image + voice",
-        "1000 AI credits / month",
-        "High daily AI cap",
-        "Ask AI + summary + read note aloud",
-        "Speech mode with Whisper",
-        "Mindmap generation from notes",
-        "Bulk AI actions + priority processing",
-      ],
-      highlight: false,
-      badge: null,
-      button: "Upgrade to Pro",
-    },
-  ];
+  
 
   return (
     <Dialog open={upgrade.isOpen} onOpenChange={upgrade.onClose}>
@@ -127,6 +74,7 @@ export const UpgradeModal = () => {
               </div>
 
               <button
+                onClick={() => router.push(`/checkout/${plan.priceId}`)}
                 className={`mt-6 w-full rounded-lg py-2 text-sm font-medium transition ${
                   plan.highlight
                     ? "bg-black text-white hover:opacity-90 dark:bg-white dark:text-black"

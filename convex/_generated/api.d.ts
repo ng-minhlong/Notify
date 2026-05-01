@@ -10,7 +10,9 @@
 
 import type * as calendarNotes from "../calendarNotes.js";
 import type * as documents from "../documents.js";
+import type * as userPlan from "../userPlan.js";
 import type * as userSettings from "../userSettings.js";
+import type * as userUsage from "../userUsage.js";
 
 import type {
   ApiFromModules,
@@ -21,7 +23,9 @@ import type {
 declare const fullApi: ApiFromModules<{
   calendarNotes: typeof calendarNotes;
   documents: typeof documents;
+  userPlan: typeof userPlan;
   userSettings: typeof userSettings;
+  userUsage: typeof userUsage;
 }>;
 
 /**
