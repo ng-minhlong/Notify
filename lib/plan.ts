@@ -41,7 +41,7 @@ export const plans = [
     {
       name: "Pro",
       price: "$20",
-      priceId: "pri_01kqgspegsmwf7q9pc3j39ekw7",
+      priceId: "pri_01kqkcrf3jmx4y5f4e1n2pa96k",
       period: "month",
       desc: "For heavy AI usage and power users",
       features: [

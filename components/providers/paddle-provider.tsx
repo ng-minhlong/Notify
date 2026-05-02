@@ -8,9 +8,10 @@ export default function PaddleProvider() {
       src="https://cdn.paddle.com/paddle/v2/paddle.js"
       strategy="afterInteractive"
       onLoad={() => {
-        window.Paddle?.Initialize({
-          token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN!,
-        });
+        window.dispatchEvent(new Event("paddle:loaded"));
+      }}
+      onError={() => {
+        window.dispatchEvent(new Event("paddle:error"));
       }}
     />
   );
