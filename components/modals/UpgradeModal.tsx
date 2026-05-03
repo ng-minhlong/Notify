@@ -24,16 +24,16 @@ const router = useRouter();
     <Dialog open={upgrade.isOpen} onOpenChange={upgrade.onClose}>
       <DialogTitle hidden>Upgrade your Plan</DialogTitle>
 
-      <DialogContent className="w-[90vw] max-w-none">
-        <DialogHeader className="border-b pb-3">
+      <DialogContent className="w-[95vw] max-w-none h-[90vh] flex flex-col p-0">
+        <DialogHeader className="border-b p-4 shrink-0">
           <h2 className="text-xl font-semibold">Upgrade your plan</h2>
           <p className="text-sm text-muted-foreground">
             Choose the plan that fits how much AI and storage you need
           </p>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 max-w-none">
-          {plans.map((plan) => (
+      
+          <div className="overflow-y-auto md:overflow-visible grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 px-6 pb-6 max-w-none">          {plans.map((plan) => (
             <div
               key={plan.name}
               className={`rounded-xl border p-6 flex flex-col justify-between transition ${
@@ -43,7 +43,8 @@ const router = useRouter();
               }`}
             >
               {plan.badge && (
-                <div className="absolute -top-3 left-4 flex items-center gap-1 rounded-full bg-black px-3 py-1 text-xs font-medium text-white dark:bg-white dark:text-black max-w-2xl">
+                
+                <div className="absolute top-0 left-4 -translate-y-1/2  flex items-center gap-1 rounded-full bg-black px-3 py-1 text-xs font-medium text-white dark:bg-white dark:text-black max-w-2xl">
                   <Sparkles className="h-3.5 w-3.5" />
                   {plan.badge}
                 </div>

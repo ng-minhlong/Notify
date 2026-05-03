@@ -292,7 +292,7 @@ export function NavToolbar() {
 
     return (
         <MinimizeWindowProvider>
-            <div className="flex gap-2 mb-4">
+            <div className="flex gap-2 mb-4 max-w-full overflow-x-auto pb-2 whitespace-nowrap scrollbar-hide">
                 <Button variant="outline" size="sm" onClick={handleCopy}>
                     <ClipboardCopy className="w-4 h-4 mr-1" /> Copy Note
                 </Button>

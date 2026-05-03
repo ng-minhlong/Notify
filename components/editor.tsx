@@ -833,7 +833,7 @@ const Editor = ({
     } catch (error: any) {
       updateSpeechBlockProps(blockId, {
         status: "error",
-        errorMessage: error?.message || "Không thể tạo summary cho transcript này.",
+        errorMessage: error?.message || "Cannot create summary.",
       });
     }
   };
