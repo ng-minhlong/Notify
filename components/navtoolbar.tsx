@@ -13,6 +13,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { MindmapViewer } from "./mindmap-viewer";
+import { useSpeechMode } from "@/hooks/useSpeechMode";
 
 // Helper to get all text from the editor
 function getEditorText() {
@@ -60,6 +61,7 @@ export function NavToolbar() {
     const [selectedQAConversation, setSelectedQAConversation] = useState<QAConversation | null>(null);
     const [inputValue, setInputValue] = useState("");
     const [isInChatMode, setIsInChatMode] = useState(false);
+    const speechMode = useSpeechMode();
 
     // Fetch document to get summary history
     const doc = useQuery(api.documents.getById, {
@@ -304,7 +306,7 @@ export function NavToolbar() {
                     <BookOpen className="w-4 h-4 mr-1" /> Ask AI
                 </Button>
                 <MinimizeWindowButton getEditorText={getEditorText} />
-                <Button variant="outline" size="sm" onClick={handleReadNote}>
+                <Button variant="outline" size="sm" onClick={speechMode.onOpen} >
                     <BookOpen className="w-4 h-4 mr-1" /> Speech mode
                 </Button>
 
