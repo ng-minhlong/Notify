@@ -13,7 +13,7 @@ import { BlockNoteEditor } from "@blocknote/core";
 import { TableOfContents } from "@/components/table-of-contents";
 import { useEditorFont } from "@/hooks/useEditorFont";
 import { toast } from "sonner";
-import { ToolbarTemplate } from "@/components/toolbarTemplate";
+import { ToolbarTemplate } from "@/components/toolbar-template";
 
 
 interface TemplateIdPageProps {

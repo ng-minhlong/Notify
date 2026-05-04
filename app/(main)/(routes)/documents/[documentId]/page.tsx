@@ -5,7 +5,7 @@ import { useMemo, use, useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 
 import { Cover } from "@/components/cover";
-import { ToolbarDocument } from "@/components/toolbarDocument";
+import { ToolbarDocument } from "@/components/toolbar-document";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NavToolbar } from "@/components/navtoolbar";
 import { MinimizeWindowProvider } from "@/components/minimize-window/MinimizeWindowContext";
