@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useMemo, use } from "react";
 
 import { Cover } from "@/components/cover";
-import { Toolbar } from "@/components/toolbar-document";
+import { ToolbarDocument } from "@/components/toolbar-document";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { api } from "@/convex/_generated/api";
@@ -62,7 +62,7 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
     <div className="pb-40">
       <Cover preview url={document.coverImage} />
       <div className="mx-auto md:max-w-3xl lg:max-w-4xl">
-        <Toolbar
+        <ToolbarDocument
           preview
           initialData={document}
           editorFont={document.editorFont ?? "default"}
