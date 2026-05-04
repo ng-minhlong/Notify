@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { NavToolbar } from "@/components/navtoolbar";
 import { MinimizeWindowProvider } from "@/components/minimize-window/MinimizeWindowContext";
 import { MinimizeWindowAutoCloser } from "@/components/minimize-window/MinimizeWindowAutoCloser";
+import { QASidebar } from "@/components/qa-sidebar";
 
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -17,6 +18,17 @@ import { useMutation, useQuery } from "convex/react";
 import { BlockNoteEditor } from "@blocknote/core";
 import { TableOfContents } from "@/components/table-of-contents";
 import { useEditorFont } from "@/hooks/useEditorFont";
+import { toast } from "sonner";
+
+interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+interface QAConversation {
+  messages: ChatMessage[];
+  createdAt: number;
+}
 
 interface DocumentIdPageProps {
   params: Promise<{
@@ -33,6 +45,13 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
   const { documentId } = use(params);
   const [editor, setEditor] = useState<BlockNoteEditor | null>(null);
   const { resolvedTheme } = useTheme();
+
+  // QA Sidebar states
+  const [isQASidebarOpen, setIsQASidebarOpen] = useState(false);
+  const [currentMessages, setCurrentMessages] = useState<ChatMessage[]>([]);
+  const [selectedQAConversation, setSelectedQAConversation] = useState<QAConversation | null>(null);
+  const [inputValue, setInputValue] = useState("");
+  const [qaLoading, setQaLoading] = useState(false);
 
   const Editor = useMemo(
     () => dynamic(() => import("@/components/editor"), { ssr: false }),
@@ -53,6 +72,85 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
   const { editorFont, isFontLoading } = useEditorFont({ enabled: true });
 
   const update = useMutation(api.documents.update);
+  const addQAToHistory = useMutation(api.documents.addQAToHistory);
+  const checkAndConsumeAIUsage = useMutation(api.userUsage.checkAndConsumeAIUsage);
+
+  // Parse QA history
+  const qaHistory: QAConversation[] = doc?.qAHistory
+    ? JSON.parse(doc.qAHistory)
+    : [];
+
+  // Handle send QA message
+  const handleSendQAMessage = async () => {
+    if (!inputValue.trim()) return;
+
+    const documentText = getEditorText();
+    if (!documentText || documentText.length < 10) {
+      toast.error("Document content is too short");
+      return;
+    }
+
+    const userMessage = inputValue.trim();
+    setInputValue("");
+
+    // Add user message to current chat
+    const updatedMessages = [...currentMessages, { role: "user" as const, content: userMessage }];
+    setCurrentMessages(updatedMessages);
+
+    setQaLoading(true);
+    try {
+      // ✅ CHECK AND CONSUME AI USAGE FIRST
+      await checkAndConsumeAIUsage({ amount: 1 });
+
+      const res = await fetch("/api/tool/qa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: documentText,
+          question: userMessage,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(err.error || "Failed to get AI response");
+      }
+
+      const data = await res.json();
+      const assistantMessage = data.answer || "No response";
+
+      // Add assistant message
+      const finalMessages = [...updatedMessages, { role: "assistant" as const, content: assistantMessage }];
+      setCurrentMessages(finalMessages);
+
+      // Save to history
+      await addQAToHistory({
+        id: documentId,
+        conversation: JSON.stringify(finalMessages),
+      });
+
+      toast.success("Conversation saved!");
+    } catch (e: any) {
+      // Check if it's a limit error
+      if (e.message && e.message.includes("limit exceeded")) {
+        toast.error(e.message);
+      } else {
+        toast.error(e.message || "Failed to process question");
+      }
+      // Remove the user message if AI failed
+      setCurrentMessages(currentMessages);
+    } finally {
+      setQaLoading(false);
+    }
+  };
+
+  // Handle ask AI entire note
+  const askAIEntireNote = () => {
+    setCurrentMessages([]);
+    setSelectedQAConversation(null);
+    setInputValue("");
+    setIsQASidebarOpen(true);
+  };
 
   useEffect(() => {
     if (!doc) return;
@@ -121,8 +219,10 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
       <MinimizeWindowAutoCloser getEditorText={getEditorText} documentId={documentId} />
       <div className="pb-35">
         <Cover url={doc.coverImage} />
-        <div className="relative mx-auto md:w-[90%]">
-          <NavToolbar />
+        <div className={`relative mx-auto md:w-[90%] transition-all duration-300 ${
+          isQASidebarOpen ? 'md:mr-96' : ''
+        }`}>
+          <NavToolbar askAIEntireNote={askAIEntireNote} />
           <p>Created At: {new Date(doc._creationTime).toLocaleString()}</p>
           <p>Last Update At: {new Date(doc.updatedAt || "").toLocaleString()}</p>
           <Toolbar initialData={doc} editorFont={activeFont} />
@@ -135,6 +235,20 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
           <TableOfContents editor={editor} />
         </div>
       </div>
+      <QASidebar
+        isOpen={isQASidebarOpen}
+        onClose={() => setIsQASidebarOpen(false)}
+        qaHistory={qaHistory}
+        currentMessages={currentMessages}
+        setCurrentMessages={setCurrentMessages}
+        selectedQAConversation={selectedQAConversation}
+        setSelectedQAConversation={setSelectedQAConversation}
+        inputValue={inputValue}
+        setInputValue={setInputValue}
+        qaLoading={qaLoading}
+        onSendMessage={handleSendQAMessage}
+        documentId={documentId}
+      />
     </MinimizeWindowProvider>
   );
 };

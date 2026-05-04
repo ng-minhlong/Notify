@@ -8,6 +8,7 @@ import { CalendarModal } from "@/components/modals/CalendarModal";
 import { UpgradeModal } from "@/components/modals/UpgradeModal";
 import { ToolsModal } from "@/components/modals/ToolsModal";
 import { SpeechMode } from "@/components/modals/SpeechMode";
+import { TemplatesModal } from "@/components/modals/TemplatesModal";
 
 export const ModalProvider = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -28,6 +29,7 @@ export const ModalProvider = () => {
       <UpgradeModal/>
       <ToolsModal/>
       <SpeechMode/>
+      <TemplatesModal/>
     </>
   );
 };
