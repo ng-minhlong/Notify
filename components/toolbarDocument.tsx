@@ -22,7 +22,7 @@ interface ToolbarProps {
   preview?: boolean;
 }
 
-export const Toolbar = ({ initialData, preview, editorFont }: ToolbarProps) => {
+export const ToolbarDocument = ({ initialData, preview, editorFont }: ToolbarProps) => {
   const inputRef = useRef<ComponentRef<"textarea">>(null);
 
   const [isEditing, setIsEditing] = useState(false);

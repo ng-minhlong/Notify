@@ -310,8 +310,11 @@ const Navigation = () => {
           <Item label="New page" onClick={handleCreate} icon={PlusCircle} />
           <Item label="Upgrade" icon={ChartNoAxesColumnIncreasing } onClick={upgrade.onOpen} />
           <Item label="More Tools" icon={Hammer } onClick={tools.onOpen} />
-
-          <Item label="Template" icon={LayoutPanelTop } onClick={templates.onOpen} />
+          <Item
+            label="Template"
+            icon={LayoutPanelTop}
+            onClick={() => router.push("/templates")}
+          />
         </div>
         <div className="mt-4">
           <div>

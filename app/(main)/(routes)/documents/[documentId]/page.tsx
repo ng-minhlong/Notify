@@ -5,7 +5,7 @@ import { useMemo, use, useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 
 import { Cover } from "@/components/cover";
-import { Toolbar } from "@/components/toolbar";
+import { ToolbarDocument } from "@/components/toolbarDocument";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NavToolbar } from "@/components/navtoolbar";
 import { MinimizeWindowProvider } from "@/components/minimize-window/MinimizeWindowContext";
@@ -225,7 +225,7 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
           <NavToolbar askAIEntireNote={askAIEntireNote} />
           <p>Created At: {new Date(doc._creationTime).toLocaleString()}</p>
           <p>Last Update At: {new Date(doc.updatedAt || "").toLocaleString()}</p>
-          <Toolbar initialData={doc} editorFont={activeFont} />
+          <ToolbarDocument initialData={doc} editorFont={activeFont} />
           <Editor
             onChange={onChange}
             initialContent={doc.content}

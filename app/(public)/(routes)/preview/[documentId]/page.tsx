@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useMemo, use } from "react";
 
 import { Cover } from "@/components/cover";
-import { Toolbar } from "@/components/toolbar";
+import { Toolbar } from "@/components/toolbarDocument";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { api } from "@/convex/_generated/api";

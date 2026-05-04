@@ -22,6 +22,36 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_parent", ["userId", "parentDocument"]),
 
+
+  categories_template: defineTable({
+    name: v.string(),
+    parentCategory: v.optional(v.id("categories_template")),
+    order: v.optional(v.number()),
+  }).index("by_parent", ["parentCategory"]),
+
+  templates: defineTable({
+    title: v.string(),
+    userId: v.string(),
+    isArchived: v.boolean(),
+    parentTemplate: v.optional(v.id("templates")),
+    content: v.optional(v.string()),
+    coverImage: v.optional(v.string()),
+    icon: v.optional(v.string()),
+    isPublished: v.boolean(),
+    order: v.optional(v.number()),
+    categoryId: v.optional(v.id("categories_template")),
+    updatedAt: v.optional(v.number()),
+    isFavorite: v.optional(v.boolean()),
+    editorFont: v.optional(v.string()),
+    isPublic: v.boolean(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_parent", ["userId", "parentTemplate"])
+    .index("by_public", ["isPublic"])
+    .index("by_public_category", ["isPublic", "categoryId"]),
+
+
+
   userSettings: defineTable({
     userId: v.string(),
     editorFont: v.optional(v.string()),

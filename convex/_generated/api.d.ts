@@ -9,8 +9,10 @@
  */
 
 import type * as calendarNotes from "../calendarNotes.js";
+import type * as categories_template from "../categories_template.js";
 import type * as documents from "../documents.js";
 import type * as subscription from "../subscription.js";
+import type * as templates from "../templates.js";
 import type * as userPlan from "../userPlan.js";
 import type * as userSettings from "../userSettings.js";
 import type * as userUsage from "../userUsage.js";
@@ -23,8 +25,10 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   calendarNotes: typeof calendarNotes;
+  categories_template: typeof categories_template;
   documents: typeof documents;
   subscription: typeof subscription;
+  templates: typeof templates;
   userPlan: typeof userPlan;
   userSettings: typeof userSettings;
   userUsage: typeof userUsage;
