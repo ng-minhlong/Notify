@@ -118,6 +118,7 @@ const DocumentsPage = () => {
   const router = useRouter();
 
   const create = useMutation(api.templates.create);
+  const applyTemplate = useMutation(api.templates.applyTemplate);
 
   const categories = useQuery(api.categories_template.get);
   const publicTemplates = useQuery(api.templates.getPublicTemplates, {
@@ -382,7 +383,17 @@ const DocumentsPage = () => {
 
             <Button
               className="rounded-2xl"
-              onClick={() => toast.info("Coming soon !")}
+              onClick={() => {
+                if (!selectedTemplate) return;
+                const promise = applyTemplate({ templateId: selectedTemplate._id }).then((documentId) => {
+                  router.push(`/documents/${documentId}`);
+                });
+                toast.promise(promise, {
+                  loading: "Creating document from template...",
+                  success: "Document created from template successfully!",
+                  error: "Failed to create document from template.",
+                });
+              }}
             >
               Apply this template
             </Button>

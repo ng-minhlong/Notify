@@ -514,3 +514,38 @@ export const getFavorites = query({
     return templates;
   },
 });
+
+export const applyTemplate = mutation({
+  args: { templateId: v.id("templates") },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const userId = identity.subject;
+
+    const template = await ctx.db.get(args.templateId);
+
+    if (!template) {
+      throw new Error("Template not found");
+    }
+
+    // Check if template is public or owned by user
+    if (!template.isPublic && template.userId !== userId) {
+      throw new Error("Not authorized to apply this template");
+    }
+
+    // Create new document based on template
+    const documentId = await ctx.db.insert("documents", {
+      title: template.title,
+      content: template.content,
+      userId,
+      isArchived: false,
+      isPublished: false,
+    });
+
+    return documentId;
+  },
+});
