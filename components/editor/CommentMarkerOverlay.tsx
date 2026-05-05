@@ -11,6 +11,7 @@ type CommentMarkerOverlayProps = {
   wrapperRef: RefObject<HTMLDivElement | null>;
   editor: EditorInstance;
   comments: EditorCommentMarker[];
+  activeCommentId?: string | null;
   onCommentBadgeClick?: (commentId: string) => void;
 };
 
@@ -18,6 +19,7 @@ export const CommentMarkerOverlay = ({
   wrapperRef,
   editor,
   comments,
+  activeCommentId,
   onCommentBadgeClick,
 }: CommentMarkerOverlayProps) => {
   const [positions, setPositions] = useState<PositionedCommentMarker[]>([]);
@@ -104,7 +106,11 @@ export const CommentMarkerOverlay = ({
         <button
           key={comment.id}
           type="button"
-          className="pointer-events-auto absolute inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-amber-300 bg-amber-100 px-1.5 text-[11px] font-semibold text-amber-900 shadow-sm transition hover:bg-amber-200"
+          className={`pointer-events-auto absolute inline-flex h-6 min-w-6 items-center justify-center rounded-full border px-1.5 text-[11px] font-semibold shadow-sm transition ${
+            comment.id === activeCommentId
+              ? "border-amber-500 bg-amber-300 text-amber-950"
+              : "border-amber-300 bg-amber-100 text-amber-900 hover:bg-amber-200"
+          }`}
           style={{
             top: `${comment.top}px`,
             left: `${comment.left}px`,

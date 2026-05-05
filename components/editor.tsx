@@ -9,12 +9,14 @@ import {
 } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import { useTheme } from "next-themes";
+import { ActiveCommentOverlay } from "@/components/editor/ActiveCommentOverlay";
 import { CommentMarkerOverlay } from "@/components/editor/CommentMarkerOverlay";
 import {
   EditorDragHandleMenu,
   EditorFormattingToolbar,
 } from "@/components/editor/CommentControls";
 import { EmbedModal } from "@/components/editor/EmbedModal";
+import { InlineCommentComposer } from "@/components/editor/InlineCommentComposer";
 import { useEditorLogic } from "@/hooks/useEditorLogic";
 import { EditorProps } from "@/lib/editor/types";
 import "@blocknote/core/style.css";
@@ -23,6 +25,13 @@ import "@blocknote/mantine/style.css";
 const Editor = ({
   comments = [],
   onCommentBadgeClick,
+  pendingComment,
+  pendingCommentContent,
+  savingComment,
+  onPendingCommentChange,
+  onPendingCommentSave,
+  onPendingCommentCancel,
+  activeComment,
   ...props
 }: EditorProps) => {
   const { resolvedTheme } = useTheme();
@@ -81,7 +90,22 @@ const Editor = ({
         wrapperRef={wrapperRef}
         editor={editor}
         comments={comments}
+        activeCommentId={activeComment?.id ?? null}
         onCommentBadgeClick={onCommentBadgeClick}
+      />
+      <ActiveCommentOverlay
+        wrapperRef={wrapperRef}
+        editor={editor}
+        activeComment={activeComment}
+      />
+      <InlineCommentComposer
+        wrapperRef={wrapperRef}
+        pendingComment={pendingComment}
+        content={pendingCommentContent}
+        saving={savingComment}
+        onChange={onPendingCommentChange}
+        onSave={onPendingCommentSave}
+        onCancel={onPendingCommentCancel}
       />
 
       <EmbedModal

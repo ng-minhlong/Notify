@@ -59,7 +59,7 @@ export function DocumentSidebarQA({
   };
 
   return (
-    <Tabs defaultValue="chat" className="flex h-full flex-col">
+    <Tabs defaultValue="chat" className="relative flex h-full min-h-0 flex-col">
       <div className="border-b border-border p-4">
         <h2 className="text-lg font-semibold">Ask AI</h2>
       </div>
@@ -76,9 +76,7 @@ export function DocumentSidebarQA({
       </TabsList>
 
       <TabsContent value="chat" className="mt-4 flex min-h-0 flex-1 flex-col px-4 pb-4">
-        <Button variant="outline" onClick={startNewChat}>
-          New Chat
-        </Button>
+       
 
         {currentMessages.length === 0 && !selectedQAConversation ? (
           <div className="flex flex-1 items-center justify-center">
@@ -145,7 +143,7 @@ export function DocumentSidebarQA({
       </TabsContent>
 
       {selectedQAConversation ? (
-        <div className="absolute inset-0 flex flex-col bg-background p-4">
+        <div className="absolute inset-0 z-10 flex min-h-0 flex-col bg-background p-4">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-md font-semibold">Conversation Details</h3>
             <Button
