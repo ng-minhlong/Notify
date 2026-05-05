@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { EditorFont } from "@/hooks/useEditorFont";
 import { useCoverImage } from "@/hooks/useCoverImage";
 import { fontFamilies } from "@/lib/editorFont";
@@ -11,13 +11,30 @@ import {
   createCodeBlockSpec,
   defaultProps,
 } from "@blocknote/core";
-import { filterSuggestionItems, insertOrUpdateBlockForSlashMenu } from "@blocknote/core/extensions";
 import {
+  SideMenuExtension,
+  filterSuggestionItems,
+  insertOrUpdateBlockForSlashMenu,
+} from "@blocknote/core/extensions";
+import {
+  BlockColorsItem,
+  DragHandleMenu,
+  FormattingToolbar,
+  FormattingToolbarController,
+  RemoveBlockItem,
+  SideMenu,
+  SideMenuController,
+  TableColumnHeaderItem,
+  TableRowHeaderItem,
   createReactBlockSpec,
   DefaultReactSuggestionItem,
   getDefaultReactSlashMenuItems,
+  getFormattingToolbarItems,
   SuggestionMenuController,
+  useBlockNoteEditor,
+  useComponentsContext,
   useCreateBlockNote,
+  useExtensionState,
 } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import { useTheme } from "next-themes";
@@ -26,7 +43,7 @@ import { codeBlockOptions } from "@blocknote/code-block";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
-import { Mic, Pause, Radio, Sparkles } from "lucide-react";
+import { MessageSquarePlus, Mic, Pause, Radio, Sparkles } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useParams } from "next/navigation";
 import { Id } from "@/convex/_generated/dataModel";
@@ -42,6 +59,7 @@ interface EditorProps {
 }
 
 type EmbedProvider = "youtube" | "drive" | "figma";
+type CommentTriggerSource = "selection" | "block";
 
 type SpeechRecognitionAlternative = {
   transcript: string;
@@ -114,8 +132,161 @@ const formatElapsedTime = (elapsedMs: number) => {
 };
 
 const MIN_SUMMARY_LENGTH = 50;
+const COMMENT_EVENT_NAME = "notify-editor-comment";
 
 type SpeechBlockStatus = "idle" | "recording" | "processing" | "completed" | "error";
+
+type CommentRequestDetail = {
+  source: CommentTriggerSource;
+  blockId?: string;
+  blockType?: string;
+  selectedText: string;
+  fallbackText: string;
+  summaryText: string;
+};
+
+const truncateCommentPreview = (value: string, maxLength = 80) => {
+  if (value.length <= maxLength) return value;
+  return `${value.slice(0, maxLength).trimEnd()}...`;
+};
+
+const extractPlainText = (value: unknown): string => {
+  if (typeof value === "string") return value.trim();
+
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => extractPlainText(item))
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+  }
+
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+
+    return [
+      extractPlainText(record.text),
+      extractPlainText(record.content),
+      extractPlainText(record.children),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+  }
+
+  return "";
+};
+
+const getBlockCommentContext = (block: any) => {
+  if (!block) return "";
+
+  return (
+    extractPlainText(block.content) ||
+    extractPlainText(block.props?.transcript) ||
+    extractPlainText(block.props?.summary) ||
+    extractPlainText(block.props?.url) ||
+    extractPlainText(block.props?.embedUrl) ||
+    extractPlainText(block.props?.title) ||
+    extractPlainText(block.props?.name) ||
+    block.type ||
+    ""
+  );
+};
+
+const emitCommentRequest = (detail: Omit<CommentRequestDetail, "summaryText">) => {
+  const selectedText = detail.selectedText.trim();
+  const fallbackText = detail.fallbackText.trim();
+  const summaryText = selectedText || fallbackText;
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent<CommentRequestDetail>(COMMENT_EVENT_NAME, {
+        detail: {
+          ...detail,
+          selectedText,
+          fallbackText,
+          summaryText,
+        },
+      }),
+    );
+  }
+
+  toast.info("Comment action is ready", {
+    description: summaryText
+      ? truncateCommentPreview(summaryText)
+      : "Da mo action Comment cho block hien tai.",
+  });
+};
+
+const SelectionCommentButton = () => {
+  const editor = useBlockNoteEditor();
+  const Components = useComponentsContext();
+
+  if (!Components) return null;
+
+  return (
+    <Components.Generic.Toolbar.Button
+      mainTooltip="Comment"
+      onClick={() => {
+        const selectedText = window.getSelection()?.toString() ?? "";
+        const currentBlock = editor.getTextCursorPosition().block;
+
+        emitCommentRequest({
+          source: "selection",
+          blockId: currentBlock?.id,
+          blockType: currentBlock?.type,
+          selectedText,
+          fallbackText: getBlockCommentContext(currentBlock),
+        });
+      }}
+    >
+      <MessageSquarePlus className="h-4 w-4" />
+    </Components.Generic.Toolbar.Button>
+  );
+};
+
+const BlockCommentItem = ({ children }: { children: ReactNode }) => {
+  const Components = useComponentsContext();
+  const block = useExtensionState(SideMenuExtension, {
+    selector: (state) => state?.block,
+  });
+
+  if (!Components || !block) return null;
+
+  return (
+    <Components.Generic.Menu.Item
+      icon={<MessageSquarePlus className="h-4 w-4" />}
+      onClick={() => {
+        emitCommentRequest({
+          source: "block",
+          blockId: block.id,
+          blockType: block.type,
+          selectedText: "",
+          fallbackText: getBlockCommentContext(block),
+        });
+      }}
+    >
+      {children}
+    </Components.Generic.Menu.Item>
+  );
+};
+
+const CustomFormattingToolbar = () => (
+  <FormattingToolbar>
+    {getFormattingToolbarItems()}
+    <SelectionCommentButton key="comment-button" />
+  </FormattingToolbar>
+);
+
+const CustomDragHandleMenu = () => (
+  <DragHandleMenu>
+    <RemoveBlockItem>Delete</RemoveBlockItem>
+    <BlockColorsItem>Colors</BlockColorsItem>
+    <TableRowHeaderItem>Row Header</TableRowHeaderItem>
+    <TableColumnHeaderItem>Column Header</TableColumnHeaderItem>
+    <BlockCommentItem>Comment</BlockCommentItem>
+  </DragHandleMenu>
+);
 
 type EditableSpeechRecorderBlockProps = {
   blockId: string;
@@ -1094,7 +1265,15 @@ const Editor = ({
         onChange={handleEditorChange}
         className="wrap-break-word"
         slashMenu={false}
+        formattingToolbar={false}
+        sideMenu={false}
       >
+        <FormattingToolbarController formattingToolbar={CustomFormattingToolbar} />
+        <SideMenuController
+          sideMenu={(props) => (
+            <SideMenu {...props} dragHandleMenu={CustomDragHandleMenu} />
+          )}
+        />
         <SuggestionMenuController
           triggerCharacter="/"
           getItems={async (query) =>
