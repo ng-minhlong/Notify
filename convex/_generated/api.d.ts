@@ -10,6 +10,7 @@
 
 import type * as calendarNotes from "../calendarNotes.js";
 import type * as categories_template from "../categories_template.js";
+import type * as documentComments from "../documentComments.js";
 import type * as documents from "../documents.js";
 import type * as subscription from "../subscription.js";
 import type * as templates from "../templates.js";
@@ -26,6 +27,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   calendarNotes: typeof calendarNotes;
   categories_template: typeof categories_template;
+  documentComments: typeof documentComments;
   documents: typeof documents;
   subscription: typeof subscription;
   templates: typeof templates;

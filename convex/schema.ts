@@ -22,6 +22,20 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_parent", ["userId", "parentDocument"]),
 
+  documentComments: defineTable({
+    documentId: v.id("documents"),
+    userId: v.string(),
+    blockId: v.string(),
+    blockType: v.optional(v.string()),
+    selectedText: v.optional(v.string()),
+    fallbackText: v.optional(v.string()),
+    content: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_document", ["documentId"])
+    .index("by_document_block", ["documentId", "blockId"]),
+
 
   categories_template: defineTable({
     name: v.string(),

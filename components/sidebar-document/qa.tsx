@@ -46,7 +46,7 @@ export function DocumentSidebarQA({
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) { 
       e.preventDefault();
       handleSend();
     }

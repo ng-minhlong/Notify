@@ -20,8 +20,9 @@ import {
   Search,
   Settings,
   Calendar,
+  Presentation,
   Trash,
-  Hammer,
+  ReceiptText,
   LayoutPanelTop,
   ChartNoAxesColumnIncreasing 
 } from "lucide-react";
@@ -306,10 +307,11 @@ const Navigation = () => {
             shortcut="Ctrl + K"
           />
           <Item label="Settings" icon={Settings} onClick={settings.onOpen} />
-          <Item label="Calendar" icon={Calendar} onClick={calendar.onOpen} />
+          <Item label="Meeting Note (Beta)" icon={Presentation } onClick={handleCreate} />
+          <Item label="Billings" icon={ReceiptText  } onClick= {settings.onOpen} />
           <Item label="New page" onClick={handleCreate} icon={PlusCircle} />
           <Item label="Upgrade" icon={ChartNoAxesColumnIncreasing } onClick={upgrade.onOpen} />
-          <Item label="More Tools" icon={Hammer } onClick={tools.onOpen} />
+         
           <Item
             label="Template"
             icon={LayoutPanelTop}
