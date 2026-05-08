@@ -280,7 +280,7 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
     const defaultFavicon =
       resolvedTheme === "dark" ? "/logo-dark.svg" : "/logo.svg";
 
-    window.document.title = `${doc.title || "Untitled"} | Notify`;
+    window.document.title = `${doc.title} | Notify`;
 
     const link = window.document.querySelector(
       "link[rel~='icon']",

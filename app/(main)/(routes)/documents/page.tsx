@@ -26,7 +26,16 @@ const DocumentsPage = () => {
   const create = useMutation(api.documents.create);
 
   const onCreate = () => {
-    const promise = create({ title: "Untitled" }).then((documentId) =>
+    const title = new Date().toLocaleString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    const promise = create({ title }).then((documentId) =>
       router.push(`/documents/${documentId}`),
     );
 
@@ -36,7 +45,6 @@ const DocumentsPage = () => {
       error: "Failed to create a new note.",
     });
   };
-
   const features = [
     {
       title: "AI Integration",
