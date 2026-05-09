@@ -19,7 +19,7 @@ It uses Convex as the backend, which is a real-time database that allows for ins
 
 ## Live
 
-Notify - [https://notify-app.vercel.app/](https://notify-app.vercel.app/)
+Notify - [https://notify-18jf.vercel.app](hhttps://notify-18jf.vercel.app/)
 
 ## Features
 
@@ -100,6 +100,5 @@ npx convex dev
 npm run dev
 ```
 
-## Acknowledgements
-
-[CodewithAntonio](https://www.youtube.com/@codewithantonio)
+## Credit
+ng.minhlong_
