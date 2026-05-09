@@ -34,6 +34,12 @@ import {
   TiptapCoordsResult,
 } from "@/lib/editor/types";
 import { fontFamilies } from "@/lib/editorFont";
+import {
+  applyMultiColumnSchema,
+  createBlockNoteDictionary,
+  createSlashMenuItems,
+  multiColumnDropCursor,
+} from "@/lib/blocknote/multiColumn";
 
 const MIN_SUMMARY_LENGTH = 50;
 const MEDIA_BLOCK_TYPES = new Set(["image", "video", "audio", "file"]);
@@ -191,14 +197,18 @@ export const useEditorLogic = ({
     ],
   );
 
+
   const schema = useMemo(
     () =>
-      createEditorSchema({
-        onSpeechBlockUpdate: updateSpeechBlockProps,
-        onGenerateSummary: generateSpeechSummary,
-      }),
+      applyMultiColumnSchema(
+        createEditorSchema({
+          onSpeechBlockUpdate: updateSpeechBlockProps,
+          onGenerateSummary: generateSpeechSummary,
+        }),
+      ),
     [generateSpeechSummary, updateSpeechBlockProps],
   );
+
 
   const editor = useCreateBlockNote({
     initialContent: initialContent
@@ -206,7 +216,10 @@ export const useEditorLogic = ({
       : undefined,
     uploadFile: handleUpload,
     schema,
+    dropCursor: multiColumnDropCursor,
+    dictionary: createBlockNoteDictionary(),
   });
+
 
   useEffect(() => {
     editorRef.current = editor;
@@ -342,8 +355,9 @@ export const useEditorLogic = ({
     [coverImage.isOpen, editable, editor],
   );
 
+
   const customSlashMenuItems = useMemo(
-    () => getCustomSlashMenuItems(editor, openEmbedModal),
+    () => createSlashMenuItems(editor, getCustomSlashMenuItems(editor, openEmbedModal)),
     [editor, openEmbedModal],
   );
 

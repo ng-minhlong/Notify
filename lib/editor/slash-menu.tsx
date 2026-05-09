@@ -66,5 +66,5 @@ export const getCustomSlashMenuItems = (
     },
   ];
 
-  return [...getDefaultReactSlashMenuItems(editor), ...speechItems, ...embedItems];
+  return [...speechItems, ...embedItems];
 };
