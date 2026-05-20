@@ -4,6 +4,8 @@ import {
   getDefaultReactSlashMenuItems,
 } from "@blocknote/react";
 import { EmbedProvider, EditorInstance } from "@/lib/editor/types";
+import Image from "next/image";
+import { AudioWaveform } from 'lucide-react';
 
 export const insertSpeechBlock = (editor: EditorInstance) => {
   const speechBlockId =
@@ -35,7 +37,7 @@ export const getCustomSlashMenuItems = (
       group: "Input",
       aliases: ["speech", "voice", "record", "audio", "transcribe", "dictation"],
       onItemClick: () => insertSpeechBlock(editor),
-      icon: <span className="text-base">🎤</span>,
+      icon: <AudioWaveform />,
     },
   ];
 
@@ -46,7 +48,7 @@ export const getCustomSlashMenuItems = (
       group: "Embeds",
       aliases: ["youtube", "video", "embed"],
       onItemClick: () => openEmbedModal("youtube"),
-      icon: <span className="text-base">▶</span>,
+      icon: <Image src="/third-party-logo/youtube.svg" alt="YouTube" width={18} height={18} />,
     },
     {
       title: "Google Drive",
@@ -54,7 +56,7 @@ export const getCustomSlashMenuItems = (
       group: "Embeds",
       aliases: ["drive", "google drive", "embed"],
       onItemClick: () => openEmbedModal("drive"),
-      icon: <span className="text-base">📁</span>,
+      icon: <Image src="/third-party-logo/drive.svg" alt="Google Drive" width={18} height={18} />,
     },
     {
       title: "Figma",
@@ -62,7 +64,7 @@ export const getCustomSlashMenuItems = (
       group: "Embeds",
       aliases: ["figma", "design", "embed"],
       onItemClick: () => openEmbedModal("figma"),
-      icon: <span className="text-base">🎨</span>,
+      icon: <Image src="/third-party-logo/figma.svg" alt="Figma" width={18} height={18} />,
     },
   ];
 

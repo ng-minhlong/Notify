@@ -47,6 +47,7 @@ import { MessageSquarePlus, Mic, Pause, Radio, Sparkles } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useParams } from "next/navigation";
 import { Id } from "@/convex/_generated/dataModel";
+import Image from "next/image";
 import "@blocknote/core/style.css";
 import "@blocknote/mantine/style.css";
 
@@ -100,15 +101,15 @@ const EMBED_PROVIDER_META: Record<
 > = {
   youtube: {
     label: "YouTube",
-    placeholder: "Dán link YouTube vào đây",
+    placeholder: "Paste link YouTube here",
   },
   drive: {
     label: "Google Drive",
-    placeholder: "Dán link Google Drive vào đây",
+    placeholder: "Paste link Google Drive here",
   },
   figma: {
     label: "Figma",
-    placeholder: "Dán link Figma vào đây",
+    placeholder: "Paste link Figma here",
   },
 };
 
@@ -359,7 +360,7 @@ const EditableSpeechRecorderBlock = ({
   useEffect(() => {
     setIsSupported(
       typeof window !== "undefined" &&
-        typeof (window as SpeechWindow).webkitSpeechRecognition !== "undefined",
+      typeof (window as SpeechWindow).webkitSpeechRecognition !== "undefined",
     );
   }, []);
 
@@ -813,7 +814,7 @@ const createEmbedBlock = createReactBlockSpec(
               />
             ) : (
               <div className="flex h-[220px] items-center justify-center px-4 text-sm text-zinc-500">
-                Không tạo được preview cho link này.
+                Unable to create preview for this link
               </div>
             )}
           </div>
@@ -864,7 +865,7 @@ const getCustomSlashMenuItems = (
       group: "Embeds",
       aliases: ["youtube", "video", "embed"],
       onItemClick: () => openEmbedModal("youtube"),
-      icon: <span className="text-base">▶</span>,
+      icon: <Image src="/third-party-logo/youtube.svg" alt="YouTube" width={18} height={18} />,
     },
     {
       title: "Google Drive",
@@ -872,7 +873,7 @@ const getCustomSlashMenuItems = (
       group: "Embeds",
       aliases: ["drive", "google drive", "embed"],
       onItemClick: () => openEmbedModal("drive"),
-      icon: <span className="text-base">📁</span>,
+      icon: <Image src="/third-party-logo/drive.svg" alt="Google Drive" width={18} height={18} />,
     },
     {
       title: "Figma",
@@ -880,7 +881,7 @@ const getCustomSlashMenuItems = (
       group: "Embeds",
       aliases: ["figma", "design", "embed"],
       onItemClick: () => openEmbedModal("figma"),
-      icon: <span className="text-base">🎨</span>,
+      icon: <Image src="/third-party-logo/figma.svg" alt="Figma" width={18} height={18} />,
     },
   ];
 
@@ -994,7 +995,7 @@ const Editor = ({
         errorMessage: "",
       });
 
-      
+
     } catch (error: any) {
       updateSpeechBlockProps(blockId, {
         status: "error",
@@ -1078,7 +1079,7 @@ const Editor = ({
         speech: speechBlock(),
       },
     });
-  }, [ checkAndConsumeAIUsage, documentId]);
+  }, [checkAndConsumeAIUsage, documentId]);
 
   const editor = useCreateBlockNote({
     initialContent: initialContent
@@ -1102,7 +1103,7 @@ const Editor = ({
     const rawUrl = embedInputUrl.trim();
 
     if (!rawUrl) {
-      setEmbedError("Vui lòng dán link trước khi bấm OK.");
+      setEmbedError("Please input link before processing");
       return;
     }
 
@@ -1119,7 +1120,7 @@ const Editor = ({
     const currentBlock = cursor?.block;
 
     if (!currentBlock) {
-      toast.error("Không tìm thấy vị trí con trỏ hiện tại.");
+      toast.error("Cannot find position of cursor");
       return;
     }
 
