@@ -107,7 +107,7 @@ export const createEmbedBlockSpec = createReactBlockSpec(
       textColor: defaultProps.textColor,
       provider: {
         default: "youtube",
-        values: ["youtube", "drive", "figma"],
+        values: ["youtube", "drive", "figma"] as const,
       },
       url: {
         default: "",

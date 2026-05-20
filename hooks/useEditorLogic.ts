@@ -271,7 +271,7 @@ export const useEditorLogic = ({
           type: "paragraph",
           content: "",
         },
-      ],
+      ] as any,
       currentBlock,
       "after",
     );
