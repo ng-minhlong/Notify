@@ -12,7 +12,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { BlockNoteEditor, PartialBlock } from "@blocknote/core";
+import { PartialBlock } from "@blocknote/core";
 import { useCreateBlockNote } from "@blocknote/react";
 import { useMutation } from "convex/react";
 import { useParams } from "next/navigation";
@@ -46,13 +46,8 @@ import YPartyKitProvider from "y-partykit/provider";
 import * as Y from "yjs";
 
 // Sets up Yjs document and PartyKit Yjs provider.
-const doc = new Y.Doc();
-const provider = new YPartyKitProvider(
-  "blocknote-dev.yousefed.partykit.dev",
-  // Use a unique name as a "room" for your application.
-  "your-project-name",
-  doc,
-);
+// NOTE: ydoc/provider are created inside the hook (not module-level) so they
+// are recreated whenever documentId changes.
 
 
 const MIN_SUMMARY_LENGTH = 50;
@@ -90,6 +85,28 @@ export const useEditorLogic = ({
   const { edgestore } = useEdgeStore();
   const coverImage = useCoverImage();
 
+  // Create a fresh Y.Doc + provider each time documentId changes.
+  // Using useMemo so they're stable within the same document, but recreated
+  // when navigating to a different document.
+  const { ydoc, provider } = useMemo(() => {
+    const doc = new Y.Doc();
+    const prov = new YPartyKitProvider(
+      "https://notion-clone-party.ng-minhlong.partykit.dev",
+      documentId ?? "",
+      doc,
+    );
+    return { ydoc: doc, provider: prov };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [documentId]);
+
+  // Destroy the provider when documentId changes or component unmounts.
+  useEffect(() => {
+    return () => {
+      provider.destroy();
+      ydoc.destroy();
+    };
+  }, [provider, ydoc]);
+
   const checkAndConsumeStorage = useMutation(api.userUsage.checkAndConsumeStorage);
   const checkAndConsumeAIUsage = useMutation(api.userUsage.checkAndConsumeAIUsage);
   const addSummaryToHistory = useMutation(api.documents.addSummaryToHistory);
@@ -99,6 +116,7 @@ export const useEditorLogic = ({
   const editorRef = useRef<EditorInstance | null>(null);
   const trackedUrlsRef = useRef<Set<string>>(new Set());
   const fileSizeMapRef = useRef<Map<string, number>>(new Map());
+  const yjsSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [embedDialogOpen, setEmbedDialogOpen] = useState(false);
   const [embedProvider, setEmbedProvider] = useState<EmbedProvider>("youtube");
@@ -224,28 +242,29 @@ export const useEditorLogic = ({
     [generateSpeechSummary, updateSpeechBlockProps],
   );
 
+  // Keep a ref to the latest onChange so Yjs observer never captures a stale
+  // closure (avoids saving to the wrong documentId after navigation).
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   const editor = useCreateBlockNote({
     collaboration: {
-      // The Yjs Provider responsible for transporting updates:
       provider,
-      // Where to store BlockNote data in the Y.Doc:
-      fragment: doc.getXmlFragment("document-store"),
-      // Information (name and color) for this user:
+      fragment: ydoc.getXmlFragment("document-store"),
       user: {
         name: user?.fullName ?? user?.username ?? "Anonymous",
         color: "#ff0000",
       },
     },
-
-    initialContent: initialContent
-      ? (JSON.parse(initialContent) as PartialBlock[])
-      : undefined,
+    // Do NOT pass initialContent here — collaboration mode ignores it.
+    // Seeding is handled below via editor.replaceBlocks once the editor mounts.
     uploadFile: handleUpload,
     schema,
     dropCursor: multiColumnDropCursor,
     dictionary: createBlockNoteDictionary(),
-  });
+  }, [ydoc, provider]);
 
 
   useEffect(() => {
@@ -253,6 +272,47 @@ export const useEditorLogic = ({
     trackedUrlsRef.current = getMediaUrls(editor);
     onEditorReady?.(editor);
   }, [editor, onEditorReady]);
+
+  // Seed Y.Doc from Convex initialContent every time the editor instance changes
+  // (i.e. every time documentId changes). We always overwrite so that navigating
+  // back to a document shows the correct saved content instead of whatever was
+  // left in the PartyKit room's in-memory state.
+  useEffect(() => {
+    if (!initialContent) return;
+
+    try {
+      const blocks = JSON.parse(initialContent) as PartialBlock[];
+      editor.replaceBlocks(editor.document, blocks as any);
+    } catch {
+      // malformed initialContent — skip seeding
+    }
+  // Intentionally only re-run when the editor instance changes (documentId change).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor]);
+
+  // Listen to Yjs updates (both local and remote peers) and persist to Convex.
+  // BlockNote's onChange only fires for local edits; Yjs remote updates bypass
+  // it entirely. We use onChangeRef to always call the latest onChange without
+  // re-subscribing the observer on every render, preventing stale-closure saves
+  // to the wrong documentId.
+  useEffect(() => {
+    const fragment = ydoc.getXmlFragment("document-store");
+
+    const handleYjsUpdate = () => {
+      if (yjsSaveTimerRef.current) clearTimeout(yjsSaveTimerRef.current);
+      yjsSaveTimerRef.current = setTimeout(() => {
+        onChangeRef.current(JSON.stringify(editor.document, null, 2));
+      }, 500);
+    };
+
+    fragment.observeDeep(handleYjsUpdate);
+    return () => {
+      fragment.unobserveDeep(handleYjsUpdate);
+      if (yjsSaveTimerRef.current) clearTimeout(yjsSaveTimerRef.current);
+    };
+  // Only re-subscribe when the editor/ydoc instance changes (documentId change).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor]);
 
   const insertEmbedBlock = useCallback(() => {
     const rawUrl = embedInputUrl.trim();
