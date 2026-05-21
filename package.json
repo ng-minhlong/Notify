@@ -43,6 +43,8 @@
     "sonner": "^1.7.4",
     "tailwind-merge": "^3.4.1",
     "usehooks-ts": "^3.1.1",
+    "y-partykit": "^0.0.33",
+    "yjs": "^13.6.30",
     "zod": "^3.24.2",
     "zustand": "^4.5.0"
   },

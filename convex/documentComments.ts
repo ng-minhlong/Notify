@@ -19,8 +19,14 @@ const ensureAuthorizedCommentAccess = async (
     throw new Error("Document not found");
   }
 
-  if (document.userId !== userId) {
-    throw new Error("Unauthorized");
+
+
+
+
+  if (!document.isCollaborative) {
+    if (document.userId !== userId) {
+      throw new Error("Unauthorized");
+    }
   }
 
   return { document, userId };

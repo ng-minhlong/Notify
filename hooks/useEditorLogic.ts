@@ -1,5 +1,7 @@
 "use client";
 
+import { useUser } from "@clerk/nextjs";
+
 import {
   CSSProperties,
   DragEvent,
@@ -40,6 +42,18 @@ import {
   createSlashMenuItems,
   multiColumnDropCursor,
 } from "@/lib/blocknote/multiColumn";
+import YPartyKitProvider from "y-partykit/provider";
+import * as Y from "yjs";
+
+// Sets up Yjs document and PartyKit Yjs provider.
+const doc = new Y.Doc();
+const provider = new YPartyKitProvider(
+  "blocknote-dev.yousefed.partykit.dev",
+  // Use a unique name as a "room" for your application.
+  "your-project-name",
+  doc,
+);
+
 
 const MIN_SUMMARY_LENGTH = 50;
 const MEDIA_BLOCK_TYPES = new Set(["image", "video", "audio", "file"]);
@@ -70,6 +84,7 @@ export const useEditorLogic = ({
   EditorProps,
   "onChange" | "initialContent" | "editable" | "editorFont" | "onEditorReady"
 >) => {
+  const { user } = useUser();
   const params = useParams();
   const documentId = params?.documentId as Id<"documents"> | undefined;
   const { edgestore } = useEdgeStore();
@@ -211,6 +226,18 @@ export const useEditorLogic = ({
 
 
   const editor = useCreateBlockNote({
+    collaboration: {
+      // The Yjs Provider responsible for transporting updates:
+      provider,
+      // Where to store BlockNote data in the Y.Doc:
+      fragment: doc.getXmlFragment("document-store"),
+      // Information (name and color) for this user:
+      user: {
+        name: user?.fullName ?? user?.username ?? "Anonymous",
+        color: "#ff0000",
+      },
+    },
+
     initialContent: initialContent
       ? (JSON.parse(initialContent) as PartialBlock[])
       : undefined,

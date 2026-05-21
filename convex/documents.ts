@@ -106,6 +106,7 @@ export const create = mutation({
       userId,
       isArchived: false,
       isPublished: false,
+      isCollaborative: false,
     });
 
     return document;
@@ -254,6 +255,10 @@ export const getById = query({
       return document;
     }
 
+    if (document.isCollaborative && !document.isArchived) {
+      return document;
+    }
+
     if (!identity) {
       throw new Error("Not authenticated");
     }
@@ -276,6 +281,7 @@ export const update = mutation({
     coverImage: v.optional(v.string()),
     icon: v.optional(v.string()),
     isPublished: v.optional(v.boolean()),
+    isCollaborative: v.optional(v.boolean()),
     editorFont: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -295,8 +301,12 @@ export const update = mutation({
       throw new Error("Document not found");
     }
 
-    if (existingDocument.userId !== userId) {
-      throw new Error("Unauthorized");
+
+
+    if (!existingDocument.isCollaborative) {
+      if (existingDocument.userId !== userId) {
+        throw new Error("Unauthorized");
+      }
     }
 
     const document = await ctx.db.patch(args.id, {

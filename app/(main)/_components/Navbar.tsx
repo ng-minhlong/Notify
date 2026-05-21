@@ -9,6 +9,8 @@ import { Title } from "./Title";
 import { Banner } from "./Banner";
 import { Menu } from "./Menu";
 import { Publish } from "./Publish";
+import { Collaborative } from "./Collaboration";
+
 import { ActionTooltip } from "@/components/action-tooltip";
 
 interface NavbarProps {
@@ -51,9 +53,12 @@ export const Navbar = ({ isCollapsed, onResetWidth }: NavbarProps) => {
           <Title initialData={document} />
           <div className="flex items-center gap-x-2">
             <Publish initialData={document} />
+            <Collaborative initialData={document} />
             <Menu documentId={document._id} />
           </div>
         </div>
+
+
       </nav>
       {document.isArchived && <Banner documentId={document._id} />}
     </>
