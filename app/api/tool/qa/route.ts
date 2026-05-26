@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 					messages: [
 						{
 							role: "system",
-							content: `Bạn là một trợ lý hữu ích. Hãy trả lời câu hỏi dựa trên nội dung document được cung cấp. Nếu thông tin không có trong document, hãy nói rõ điều đó. Trả lời bằng tiếng Việt.
+							content: `You are a helpful assistant. Please answer the question based on the provided document content. If the information is not available in the document, clearly state that. Respond in Vietnamese.
 
 Document content:
 ${text}`,

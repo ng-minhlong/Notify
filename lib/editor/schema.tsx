@@ -2,6 +2,7 @@ import { BlockNoteSchema, createCodeBlockSpec, defaultProps } from "@blocknote/c
 import { createReactBlockSpec } from "@blocknote/react";
 import { codeBlockOptions } from "@blocknote/code-block";
 import { SpeechRecorderBlock } from "@/components/editor/SpeechRecorderBlock";
+import { ChartBlock, ChartType, getDefaultChartProps } from "@/components/editor/ChartBlock";
 import { createEmbedBlockSpec } from "@/lib/editor/embed";
 import { SpeechBlockStatus } from "@/lib/editor/types";
 
@@ -68,6 +69,60 @@ export const createEditorSchema = ({
     },
   );
 
+  // ─── Chart block ────────────────────────────────────────────────────────────
+  const chartBlock = createReactBlockSpec(
+    {
+      type: "chart",
+      propSchema: {
+        textAlignment: defaultProps.textAlignment,
+        textColor: defaultProps.textColor,
+        chartType: {
+          default: "line" as ChartType,
+          values: ["line", "bar", "area", "pie", "scatter", "composed", "radar"] as const,
+        },
+        title: { default: "" },
+        dataJson: { default: "" },
+        seriesKeys: { default: "" },
+        xKey: { default: "" },
+      },
+      content: "none",
+    },
+    {
+      render: (props) => {
+        const rawChartType = (props.block.props.chartType as string) as ChartType;
+        const chartType: ChartType = [
+          "line", "bar", "area", "pie", "scatter", "composed", "radar",
+        ].includes(rawChartType)
+          ? rawChartType
+          : "line";
+
+        // Seed defaults if the block was just inserted (empty dataJson)
+        const storedDataJson = (props.block.props.dataJson as string) || "";
+        const defaults = getDefaultChartProps(chartType);
+        const dataJson = storedDataJson || defaults.dataJson;
+        const xKey = (props.block.props.xKey as string) || defaults.xKey;
+        const seriesKeys = (props.block.props.seriesKeys as string) || defaults.seriesKeys;
+        const title = (props.block.props.title as string) || defaults.title;
+
+        return (
+          <ChartBlock
+            chartType={chartType}
+            title={title}
+            dataJson={dataJson}
+            xKey={xKey}
+            seriesKeys={seriesKeys}
+            onUpdate={(updated) => {
+              props.editor.updateBlock(props.block.id, {
+                type: "chart",
+                props: updated as Record<string, string>,
+              });
+            }}
+          />
+        );
+      },
+    },
+  );
+
   return BlockNoteSchema.create().extend({
     blockSpecs: {
       codeBlock: createCodeBlockSpec({
@@ -88,6 +143,7 @@ export const createEditorSchema = ({
       }),
       embed: createEmbedBlockSpec(),
       speech: speechBlock(),
+      chart: chartBlock(),
     },
   });
 };
