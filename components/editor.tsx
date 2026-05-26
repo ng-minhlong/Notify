@@ -8,6 +8,7 @@ import {
   SuggestionMenuController,
 } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
+import { AIMenuController } from "@blocknote/xl-ai";
 import { useTheme } from "next-themes";
 import { ActiveCommentOverlay } from "@/components/editor/ActiveCommentOverlay";
 import { CommentMarkerOverlay } from "@/components/editor/CommentMarkerOverlay";
@@ -72,6 +73,7 @@ const Editor = ({
         formattingToolbar={false}
         sideMenu={false}
       >
+        <AIMenuController />
         <FormattingToolbarController formattingToolbar={EditorFormattingToolbar} />
         <SideMenuController
           sideMenu={(sideMenuProps) => (

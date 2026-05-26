@@ -14,6 +14,10 @@ import {
 } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { useCreateBlockNote } from "@blocknote/react";
+import { AIExtension } from "@blocknote/xl-ai";
+import { en as aiEn } from "@blocknote/xl-ai/locales";
+import "@blocknote/xl-ai/style.css";
+import { DefaultChatTransport } from "ai";
 import { useMutation } from "convex/react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
@@ -263,7 +267,17 @@ export const useEditorLogic = ({
     uploadFile: handleUpload,
     schema,
     dropCursor: multiColumnDropCursor,
-    dictionary: createBlockNoteDictionary(),
+    dictionary: {
+      ...createBlockNoteDictionary(),
+      ai: aiEn,
+    },
+    extensions: [
+      AIExtension({
+        transport: new DefaultChatTransport({
+          api: "/api/tool/ai",
+        }),
+      }),
+    ],
   }, [ydoc, provider]);
 
 

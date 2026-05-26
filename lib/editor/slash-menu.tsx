@@ -3,6 +3,7 @@ import {
   DefaultReactSuggestionItem,
   getDefaultReactSlashMenuItems,
 } from "@blocknote/react";
+import { getAISlashMenuItems } from "@blocknote/xl-ai";
 import { EmbedProvider, EditorInstance } from "@/lib/editor/types";
 import Image from "next/image";
 import { AudioWaveform } from 'lucide-react';
@@ -68,5 +69,5 @@ export const getCustomSlashMenuItems = (
     },
   ];
 
-  return [...speechItems, ...embedItems];
+  return [...speechItems, ...embedItems, ...getAISlashMenuItems(editor as any)];
 };

@@ -14,6 +14,7 @@ import {
   useComponentsContext,
   useExtensionState,
 } from "@blocknote/react";
+import { AIToolbarButton } from "@blocknote/xl-ai";
 import { MessageSquarePlus } from "lucide-react";
 import { emitCommentRequest, getBlockCommentContext } from "@/lib/editor/comments";
 
@@ -73,6 +74,7 @@ const BlockCommentItem = ({ children }: { children: ReactNode }) => {
 export const EditorFormattingToolbar = () => (
   <FormattingToolbar>
     {getFormattingToolbarItems()}
+    <AIToolbarButton key="ai-button" />
     <SelectionCommentButton key="comment-button" />
   </FormattingToolbar>
 );

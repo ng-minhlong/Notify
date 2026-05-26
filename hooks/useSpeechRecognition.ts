@@ -1,37 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { SonioxClient } from "@soniox/client";
 import { SpeechBlockStatus } from "@/lib/editor/types";
-
-type SpeechRecognitionAlternative = {
-  transcript: string;
-};
-
-type SpeechRecognitionResultLike = {
-  isFinal: boolean;
-  0: SpeechRecognitionAlternative;
-  length: number;
-};
-
-type SpeechRecognitionEventLike = {
-  resultIndex: number;
-  results: ArrayLike<SpeechRecognitionResultLike>;
-};
-
-type WebkitSpeechRecognitionInstance = {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
-  onerror: ((event: { error?: string }) => void) | null;
-  onend: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-};
-
-type SpeechWindow = Window & {
-  webkitSpeechRecognition?: new () => WebkitSpeechRecognitionInstance;
-};
 
 type UseSpeechRecognitionParams = {
   blockId: string;
@@ -45,6 +16,22 @@ type UseSpeechRecognitionParams = {
     props: Record<string, string>,
   ) => void;
   onGenerateSummary: (blockId: string, transcript: string) => Promise<void>;
+};
+
+type SonioxToken = {
+  text?: string;
+  is_final?: boolean;
+  isFinal?: boolean;
+};
+
+type SonioxResult = {
+  tokens?: SonioxToken[];
+};
+
+type SonioxRecording = {
+  on: (event: string, handler: (...args: any[]) => void) => void;
+  stop: () => Promise<void>;
+  cancel?: () => void;
 };
 
 const appendTranscript = (current: string, incoming: string) => {
@@ -66,6 +53,33 @@ export const formatElapsedTime = (elapsedMs: number) => {
   return `${minutes}:${seconds}`;
 };
 
+const isFinalToken = (token: SonioxToken) =>
+  Boolean(token.is_final ?? token.isFinal);
+
+const getTokenText = (token: SonioxToken) => token.text ?? "";
+
+let sonioxClient: SonioxClient | null = null;
+
+const getSonioxClient = () => {
+  if (!sonioxClient) {
+    sonioxClient = new SonioxClient({
+      config: async () => {
+        const res = await fetch("/api/soniox/tmp-key", {
+          method: "POST",
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch Soniox temporary key");
+        }
+
+        return await res.json();
+      },
+    });
+  }
+
+  return sonioxClient;
+};
+
 export const useSpeechRecognition = ({
   blockId,
   initialTranscript,
@@ -76,9 +90,8 @@ export const useSpeechRecognition = ({
   onSpeechBlockUpdate,
   onGenerateSummary,
 }: UseSpeechRecognitionParams) => {
-  const recognitionRef = useRef<WebkitSpeechRecognitionInstance | null>(null);
+  const recordingRef = useRef<SonioxRecording | null>(null);
   const transcriptRef = useRef(initialTranscript);
-  const shouldKeepRecordingRef = useRef(false);
   const timerRef = useRef<number | null>(null);
   const segmentStartRef = useRef<number | null>(null);
   const accumulatedMsRef = useRef(Number(initialDurationMs) || 0);
@@ -120,7 +133,9 @@ export const useSpeechRecognition = ({
   useEffect(() => {
     setIsSupported(
       typeof window !== "undefined" &&
-        typeof (window as SpeechWindow).webkitSpeechRecognition !== "undefined",
+        typeof navigator !== "undefined" &&
+        !!navigator.mediaDevices &&
+        typeof MediaRecorder !== "undefined",
     );
   }, []);
 
@@ -136,6 +151,7 @@ export const useSpeechRecognition = ({
       accumulatedMsRef.current += Date.now() - segmentStartRef.current;
       segmentStartRef.current = null;
       setElapsedMs(accumulatedMsRef.current);
+
       onSpeechBlockUpdate(blockId, {
         durationMs: `${accumulatedMsRef.current}`,
       });
@@ -146,31 +162,30 @@ export const useSpeechRecognition = ({
     stopTimer();
     segmentStartRef.current = Date.now();
     setElapsedMs(accumulatedMsRef.current);
+
     timerRef.current = window.setInterval(() => {
       const extra =
-        segmentStartRef.current !== null ? Date.now() - segmentStartRef.current : 0;
+        segmentStartRef.current !== null
+          ? Date.now() - segmentStartRef.current
+          : 0;
+
       setElapsedMs(accumulatedMsRef.current + extra);
     }, 250);
   };
 
-  const shutdownRecognition = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.onresult = null;
-      recognitionRef.current.onerror = null;
-      recognitionRef.current.onend = null;
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
+  const shutdownRecognition = async () => {
+    try {
+      recordingRef.current?.cancel?.();
+    } catch {
+      // noop
+    } finally {
+      recordingRef.current = null;
     }
   };
 
-  const startRecognition = () => {
-    const SpeechRecognitionCtor =
-      typeof window !== "undefined"
-        ? (window as SpeechWindow).webkitSpeechRecognition
-        : undefined;
-
-    if (!SpeechRecognitionCtor) {
-      const message = "Trình duyệt này chưa hỗ trợ Web Speech API bằng webkit.";
+  const startRecognition = async () => {
+    if (!isSupported) {
+      const message = "Trình duyệt này chưa hỗ trợ ghi âm realtime.";
       setStatus("error");
       setError(message);
       setActiveTab("summary");
@@ -181,87 +196,86 @@ export const useSpeechRecognition = ({
       return;
     }
 
-    shutdownRecognition();
-
-    const recognition = new SpeechRecognitionCtor();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = "vi-VN";
-
-    recognition.onresult = (event) => {
-      let finalChunk = "";
-      let interimChunk = "";
-
-      for (let index = event.resultIndex; index < event.results.length; index += 1) {
-        const result = event.results[index];
-        const chunk = result[0]?.transcript ?? "";
-
-        if (result.isFinal) {
-          finalChunk += `${chunk} `;
-        } else {
-          interimChunk += chunk;
-        }
-      }
-
-      if (finalChunk.trim()) {
-        const nextTranscript = appendTranscript(
-          transcriptRef.current,
-          finalChunk.trim(),
-        );
-
-        transcriptRef.current = nextTranscript;
-        setTranscript(nextTranscript);
-        setInterimTranscript(interimChunk.trim());
-        onSpeechBlockUpdate(blockId, {
-          transcript: nextTranscript,
-          errorMessage: "",
-        });
-      } else {
-        setInterimTranscript(interimChunk.trim());
-      }
-    };
-
-    recognition.onerror = (event) => {
-      if (event.error === "aborted") return;
-
-      const message = "Không thể tiếp tục nhận giọng nói.";
-      shouldKeepRecordingRef.current = false;
-      commitElapsedSegment();
-      stopTimer();
-      setStatus("error");
-      setError(message);
-      setActiveTab("summary");
-      onSpeechBlockUpdate(blockId, {
-        status: "error",
-        errorMessage: message,
-        durationMs: `${accumulatedMsRef.current}`,
-      });
-    };
-
-    recognition.onend = () => {
-      commitElapsedSegment();
-      stopTimer();
-      recognitionRef.current = null;
-    };
-
     try {
-      recognition.start();
-      recognitionRef.current = recognition;
-      shouldKeepRecordingRef.current = true;
+      await shutdownRecognition();
+
+      const client = getSonioxClient();
+
+      const recording = client.realtime.record({
+        model: "stt-rt-v4",
+        language_hints: ["vi", "en"],
+        enable_endpoint_detection: true,
+      }) as unknown as SonioxRecording;
+
+      recordingRef.current = recording;
+
+      recording.on("result", (result: SonioxResult) => {
+        const tokens = result.tokens ?? [];
+
+        const finalChunk = tokens
+          .filter((token) => isFinalToken(token))
+          .map((token) => getTokenText(token))
+          .join("");
+
+        const interimChunk = tokens
+          .filter((token) => !isFinalToken(token))
+          .map((token) => getTokenText(token))
+          .join("");
+
+        if (finalChunk.trim()) {
+          const nextTranscript = appendTranscript(
+            transcriptRef.current,
+            finalChunk,
+          );
+
+          transcriptRef.current = nextTranscript;
+          setTranscript(nextTranscript);
+          onSpeechBlockUpdate(blockId, {
+            transcript: nextTranscript,
+            errorMessage: "",
+          });
+        }
+
+        setInterimTranscript(interimChunk.trim());
+      });
+
+      recording.on("error", (err: unknown) => {
+        console.error(err);
+
+        const message = "Không thể tiếp tục nhận giọng nói.";
+        commitElapsedSegment();
+        stopTimer();
+
+        setStatus("error");
+        setError(message);
+        setActiveTab("summary");
+
+        onSpeechBlockUpdate(blockId, {
+          status: "error",
+          errorMessage: message,
+          durationMs: `${accumulatedMsRef.current}`,
+        });
+      });
+
       setStatus("recording");
       setError("");
       setActiveTab("transcript");
       setInterimTranscript("");
+
       onSpeechBlockUpdate(blockId, {
         status: "recording",
         errorMessage: "",
       });
+
       startTimer();
-    } catch {
+    } catch (err) {
+      console.error(err);
+
       const message = "Microphone đang bận hoặc chưa được cấp quyền.";
       setStatus("error");
       setError(message);
       setActiveTab("summary");
+
       onSpeechBlockUpdate(blockId, {
         status: "error",
         errorMessage: message,
@@ -270,18 +284,19 @@ export const useSpeechRecognition = ({
   };
 
   const stopRecognition = async () => {
-    shouldKeepRecordingRef.current = false;
     setInterimTranscript("");
     commitElapsedSegment();
     stopTimer();
 
-    if (recognitionRef.current) {
-      const activeRecognition = recognitionRef.current;
-      recognitionRef.current = null;
-      activeRecognition.onresult = null;
-      activeRecognition.onerror = null;
-      activeRecognition.onend = null;
-      activeRecognition.stop();
+    const activeRecording = recordingRef.current;
+    recordingRef.current = null;
+
+    if (activeRecording) {
+      try {
+        await activeRecording.stop();
+      } catch (err) {
+        console.error(err);
+      }
     }
 
     const finalTranscript = transcriptRef.current.trim();
@@ -301,6 +316,7 @@ export const useSpeechRecognition = ({
     setStatus("processing");
     setError("");
     setActiveTab("summary");
+
     onSpeechBlockUpdate(blockId, {
       status: "processing",
       errorMessage: "",
@@ -312,9 +328,8 @@ export const useSpeechRecognition = ({
 
   useEffect(() => {
     return () => {
-      shouldKeepRecordingRef.current = false;
       stopTimer();
-      shutdownRecognition();
+      void shutdownRecognition();
     };
   }, []);
 
