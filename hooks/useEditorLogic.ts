@@ -95,12 +95,12 @@ export const useEditorLogic = ({
   const { ydoc, provider } = useMemo(() => {
     const doc = new Y.Doc();
     const prov = new YPartyKitProvider(
-      "https://notion-clone-party.ng-minhlong.partykit.dev",
+      "http://0.0.0.0:1999",
       documentId ?? "",
       doc,
     );
     return { ydoc: doc, provider: prov };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [documentId]);
 
   // Destroy the provider when documentId changes or component unmounts.
@@ -300,8 +300,8 @@ export const useEditorLogic = ({
     } catch {
       // malformed initialContent — skip seeding
     }
-  // Intentionally only re-run when the editor instance changes (documentId change).
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Intentionally only re-run when the editor instance changes (documentId change).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
 
   // Listen to Yjs updates (both local and remote peers) and persist to Convex.
@@ -324,8 +324,8 @@ export const useEditorLogic = ({
       fragment.unobserveDeep(handleYjsUpdate);
       if (yjsSaveTimerRef.current) clearTimeout(yjsSaveTimerRef.current);
     };
-  // Only re-subscribe when the editor/ydoc instance changes (documentId change).
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Only re-subscribe when the editor/ydoc instance changes (documentId change).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
 
   const insertEmbedBlock = useCallback(() => {

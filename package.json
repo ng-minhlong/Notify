@@ -49,6 +49,7 @@
     "sharp": "^0.33.2",
     "sonner": "^1.7.4",
     "tailwind-merge": "^3.4.1",
+    "tldraw": "^5.3.0",
     "usehooks-ts": "^3.1.1",
     "y-partykit": "^0.0.33",
     "yjs": "^13.6.30",
